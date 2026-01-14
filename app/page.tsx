@@ -22,6 +22,7 @@ import { supabase } from "@/lib/supabase"
 import { Expense, UserRole } from "@/types"
 import { Plus } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { mockCategories } from "@/lib/mock-data"
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -232,7 +233,7 @@ export default function Home() {
           ) : (
             <ExpenseList
               expenses={sortedExpenses}
-              categories={categories}
+              categories={mockCategories}
               currentUser={currentUser}
               onDelete={handleDeleteExpense}
             />
@@ -256,7 +257,7 @@ export default function Home() {
             </DrawerHeader>
             <div className="px-4 pb-8">
               <ExpenseForm
-                categories={categories}
+                categories={mockCategories}
                 currentUser={currentUser}
                 onSubmit={handleAddExpense}
                 onCancel={() => setDrawerOpen(false)}
