@@ -1,5 +1,5 @@
 import { supabase } from "./supabase"
-import { Expense } from "@/types"
+import { Expense, Category } from "@/types"
 
 export async function fetchExpenses(userId: string, householdId?: string | null) {
   let query = supabase
@@ -94,5 +94,78 @@ export async function deleteExpense(expenseId: string) {
   if (error) {
     console.error("Error deleting expense:", error)
     throw error
+  }
+}
+
+export async function fetchCategories(): Promise<Category[]> {
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name", { ascending: true })
+
+    if (error) {
+      console.error("Error fetching categories:", error)
+      // Si la table n'existe pas ou est vide, créer les catégories par défaut
+      return await createDefaultCategories()
+    }
+
+    if (!data || data.length === 0) {
+      return await createDefaultCategories()
+    }
+
+    // Convertir les données de la base vers le format Category
+    return data.map((category: any) => ({
+      id: category.id,
+      name: category.name,
+      icon: category.icon,
+      createdAt: new Date(category.created_at),
+    })) as Category[]
+  } catch (error) {
+    console.error("Error fetching categories:", error)
+    return await createDefaultCategories()
+  }
+}
+
+async function createDefaultCategories(): Promise<Category[]> {
+  const defaultCategories = [
+    { name: "Logement", icon: "🏠" },
+    { name: "Alimentation", icon: "🍔" },
+    { name: "Transport", icon: "🚗" },
+    { name: "Loisirs", icon: "🎬" },
+  ]
+
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .insert(defaultCategories)
+      .select()
+
+    if (error) {
+      console.error("Error creating default categories:", error)
+      // Si l'insertion échoue, retourner les catégories par défaut en mémoire
+      return defaultCategories.map((cat, index) => ({
+        id: `default-${index}`,
+        name: cat.name,
+        icon: cat.icon,
+        createdAt: new Date(),
+      })) as Category[]
+    }
+
+    return (data || []).map((category: any) => ({
+      id: category.id,
+      name: category.name,
+      icon: category.icon,
+      createdAt: new Date(category.created_at),
+    })) as Category[]
+  } catch (error) {
+    console.error("Error creating default categories:", error)
+    // Retourner les catégories par défaut en mémoire si l'insertion échoue
+    return defaultCategories.map((cat, index) => ({
+      id: `default-${index}`,
+      name: cat.name,
+      icon: cat.icon,
+      createdAt: new Date(),
+    })) as Category[]
   }
 }
