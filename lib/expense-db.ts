@@ -64,6 +64,8 @@ export async function createExpense(
 
   if (error) {
     console.error("Error creating expense:", error)
+    console.log("Error details:", JSON.stringify(error, null, 2))
+    alert(`Erreur lors de l'ajout de la dépense: ${error.message}`)
     throw error
   }
 
@@ -132,7 +134,7 @@ async function createDefaultCategories(): Promise<Category[]> {
     { name: "Logement", icon: "🏠" },
     { name: "Alimentation", icon: "🍔" },
     { name: "Transport", icon: "🚗" },
-    { name: "Loisirs", icon: "🎬" },
+    { name: "Santé", icon: "💊" },
   ]
 
   try {
