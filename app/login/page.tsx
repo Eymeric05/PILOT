@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { LogIn, Mail } from "lucide-react"
+import { DarkModeToggle } from "@/components/dark-mode-toggle"
+import Link from "next/link"
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -102,17 +104,24 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-background flex items-center justify-center px-6 py-8">
       <div className="w-full max-w-md">
+        {/* Header avec toggle mode nuit */}
+        <div className="absolute top-4 right-4">
+          <DarkModeToggle />
+        </div>
+        
         <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-14 w-14 flex items-center justify-center">
-              <img
-                src="/img/PILOT_logo.webp"
-                alt="PILOT"
-                className="h-full w-full object-contain"
-              />
+          <Link href="/" className="inline-block">
+            <div className="flex items-center justify-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="h-14 w-14 flex items-center justify-center">
+                <img
+                  src="/PILOT_logo.webp"
+                  alt="PILOT"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <h1 className="text-4xl font-bold text-foreground tracking-tight">PILOT</h1>
             </div>
-            <h1 className="text-4xl font-bold text-foreground tracking-tight">PILOT</h1>
-          </div>
+          </Link>
           <p className="text-sm text-muted-foreground tracking-tight">
             Budget mensuel partagé
           </p>

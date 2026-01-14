@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -15,7 +16,6 @@ import { ExpenseForm } from "@/components/expense-form"
 import { MonthSelector } from "@/components/month-selector"
 import { HorizonSplit, FilterZone } from "@/components/horizon-split"
 import { UserProfile } from "@/components/user-profile"
-import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import { mockCategories } from "@/lib/mock-data"
 import { filterExpensesByMonth, calculateMonthlyTotal, formatAmount } from "@/lib/expense-utils"
 import { fetchExpenses, createExpense, deleteExpense } from "@/lib/expense-db"
@@ -193,10 +193,10 @@ export default function Home() {
       <div className="mx-auto max-w-md md:max-w-2xl lg:max-w-3xl px-4 py-6">
         {/* Header */}
         <header className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="h-10 w-10 shrink-0 flex items-center justify-center">
               <img
-                src="/img/PILOT_logo.webp"
+                src="/PILOT_logo.webp"
                 alt="PILOT"
                 className="h-full w-full object-contain"
               />
@@ -207,12 +207,9 @@ export default function Home() {
                 Budget mensuel partagé
               </p>
             </div>
-          </div>
+          </Link>
           {user && (
-            <div className="flex items-center gap-2">
-              <DarkModeToggle />
-              <UserProfile />
-            </div>
+            <UserProfile />
           )}
         </header>
 
