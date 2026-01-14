@@ -162,7 +162,7 @@ export default function LoginPage() {
             )}
 
             {message && (
-              <div className="text-sm text-secondary-foreground bg-secondary/50 border border-border rounded-lg p-3">
+              <div className="text-sm text-secondary-foreground bg-secondary/50 rounded-lg p-3 shadow-sm">
                 {message}
               </div>
             )}
@@ -183,7 +183,7 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border/50" />
+              <span className="w-full border-t border-muted" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-2 text-muted-foreground tracking-tight">Ou</span>

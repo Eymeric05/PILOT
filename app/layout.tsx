@@ -6,7 +6,10 @@ export const metadata: Metadata = {
   description: "Gestion de budget mensuel partagé",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
     apple: "/apple-touch-icon.png",
   },
   appleWebApp: {

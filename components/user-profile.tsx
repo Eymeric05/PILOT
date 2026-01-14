@@ -49,9 +49,10 @@ export function UserProfile({ children }: UserProfileProps) {
     try {
       await supabase.auth.signOut()
       setDrawerOpen(false)
-      router.push("/login")
+      window.location.href = "/login"
     } catch (error) {
       console.error("Error signing out:", error)
+      window.location.href = "/login"
     }
   }
 
@@ -81,7 +82,7 @@ export function UserProfile({ children }: UserProfileProps) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-8 space-y-4">
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white shadow-sm">
+          <div className="flex items-center gap-4 p-4 rounded-3xl bg-white shadow-sm">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
               <User className="h-6 w-6 text-primary" />
             </div>
