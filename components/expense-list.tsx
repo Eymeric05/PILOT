@@ -129,7 +129,7 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
           return (
             <div
               key={expense.id}
-              className="flex items-center gap-3 rounded-3xl bg-white shadow-sm p-4 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              className="flex items-center gap-3 rounded-3xl bg-card shadow-sm p-4 animate-in fade-in slide-in-from-bottom-2 duration-200"
             >
               {/* Logo ou icône générique */}
               <LogoDisplay logoUrl={expense.logoUrl} name={expense.name} />

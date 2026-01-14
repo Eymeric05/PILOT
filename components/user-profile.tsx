@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { User, LogOut, Mail } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { DarkModeToggle } from "@/components/dark-mode-toggle"
 
 interface UserProfileProps {
   children?: React.ReactNode
@@ -91,7 +92,7 @@ export function UserProfile({ children }: UserProfileProps) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-8 space-y-4">
-          <div className="flex items-center gap-4 p-4 rounded-3xl bg-white shadow-sm">
+          <div className="flex items-center gap-4 p-4 rounded-3xl bg-card shadow-sm">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
               <User className="h-6 w-6 text-primary" />
             </div>
@@ -107,14 +108,19 @@ export function UserProfile({ children }: UserProfileProps) {
               </div>
             </div>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleSignOut}
-            className="w-full gap-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
-          >
-            <LogOut className="h-4 w-4" />
-            Se déconnecter
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <DarkModeToggle />
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleSignOut}
+              className="flex-1 gap-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+            >
+              <LogOut className="h-4 w-4" />
+              Se déconnecter
+            </Button>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>

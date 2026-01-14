@@ -175,7 +175,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <main className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground tracking-tight">Chargement...</p>
         </div>
@@ -188,7 +188,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-md md:max-w-2xl lg:max-w-3xl px-4 py-6">
         {/* Header */}
         <header className="mb-6 flex items-center justify-between">
