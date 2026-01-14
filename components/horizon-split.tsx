@@ -57,8 +57,8 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         type="button"
         onClick={() => onFilterChange(activeFilter === "user1" ? null : "user1")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 bg-card border-r border-border transition-opacity duration-200",
-          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0",
+          "flex flex-col items-center justify-center p-4 bg-card border-r border-border transition-all duration-200 ease-out",
+          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0 active:scale-[0.98]",
           activeFilter === "user1" && "opacity-100 bg-accent",
           activeFilter !== "user1" && "opacity-90"
         )}
@@ -71,8 +71,8 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         type="button"
         onClick={() => onFilterChange(activeFilter === "shared" ? null : "shared")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 bg-card border-r border-border transition-opacity duration-200",
-          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0",
+          "flex flex-col items-center justify-center p-4 bg-card border-r border-border transition-all duration-200 ease-out",
+          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0 active:scale-[0.98]",
           activeFilter === "shared" && "opacity-100 bg-accent",
           activeFilter !== "shared" && "opacity-90"
         )}
@@ -85,8 +85,8 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         type="button"
         onClick={() => onFilterChange(activeFilter === "user2" ? null : "user2")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 bg-card transition-opacity duration-200",
-          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0",
+          "flex flex-col items-center justify-center p-4 bg-card transition-all duration-200 ease-out",
+          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0 active:scale-[0.98]",
           activeFilter === "user2" && "opacity-100 bg-accent",
           activeFilter !== "user2" && "opacity-90"
         )}

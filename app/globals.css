@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 60 8% 98%;
-    --foreground: 210 5% 11%;
-    --card: 60 8% 98%;
-    --card-foreground: 210 5% 11%;
-    --popover: 60 8% 98%;
-    --popover-foreground: 210 5% 11%;
-    --primary: 215 16% 25%;
-    --primary-foreground: 60 8% 98%;
-    --secondary: 214 20% 90%;
-    --secondary-foreground: 210 5% 11%;
-    --muted: 214 20% 90%;
-    --muted-foreground: 210 5% 45%;
-    --accent: 215 16% 25%;
-    --accent-foreground: 60 8% 98%;
-    --destructive: 0 84.2% 60.2%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 9%;
+    --primary: 258 50% 78%;
+    --primary-foreground: 240 10% 9%;
+    --secondary: 158 35% 85%;
+    --secondary-foreground: 240 10% 9%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 258 50% 78%;
+    --accent-foreground: 240 10% 9%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 210 5% 11%;
-    --radius: 0.25rem;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 258 50% 78%;
+    --radius: 0.5rem;
   }
 }
 
@@ -35,5 +35,7 @@
     @apply bg-background text-foreground;
     font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

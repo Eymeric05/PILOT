@@ -39,7 +39,7 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
   }
 
   return (
-    <div 
+      <div 
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -47,7 +47,7 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
       <img
         src={isHovered ? colorUrl : greyscaleUrl}
         alt={name}
-        className="h-8 w-8 rounded object-contain transition-opacity duration-200"
+        className="h-8 w-8 rounded object-contain transition-opacity duration-300 ease-out"
         onError={() => setHasError(true)}
       />
     </div>
@@ -82,7 +82,7 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
           return (
             <div
               key={expense.id}
-              className="flex items-center gap-3 border border-border rounded bg-card p-3 transition-opacity duration-200"
+              className="flex items-center gap-3 border border-border rounded bg-card p-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
             >
               {/* Logo ou icône générique */}
               <LogoDisplay logoUrl={expense.logoUrl} name={expense.name} />
@@ -121,7 +121,7 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
                 <button
                   type="button"
                   onClick={() => onDelete(expense.id)}
-                  className="ml-2 p-1 rounded hover:bg-muted transition-opacity duration-200 opacity-60 hover:opacity-100"
+                  className="ml-2 p-1 rounded hover:bg-muted transition-all duration-200 ease-out opacity-60 hover:opacity-100 active:scale-95"
                   aria-label="Supprimer la dépense"
                 >
                   <X className="h-4 w-4 text-muted-foreground" />

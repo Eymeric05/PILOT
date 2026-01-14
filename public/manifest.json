@@ -4,8 +4,8 @@
   "description": "Gestion de budget mensuel partagé",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F9F9F8",
-  "theme_color": "#334155",
+  "background_color": "#FFFFFF",
+  "theme_color": "#9D8EDD",
   "orientation": "portrait-primary",
   "icons": [
     {

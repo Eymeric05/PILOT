@@ -179,11 +179,20 @@ export default function Home() {
       <div className="container mx-auto max-w-2xl px-4 py-6">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-medium mb-2">PILOT</h1>
-            <p className="text-sm text-muted-foreground">
-              Budget mensuel partagé
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 shrink-0">
+              <img
+                src="/img/PILOT_logo.webp"
+                alt="PILOT"
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-medium mb-0.5">PILOT</h1>
+              <p className="text-sm text-muted-foreground">
+                Budget mensuel partagé
+              </p>
+            </div>
           </div>
           {user && (
             <UserProfile />
