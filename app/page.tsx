@@ -232,7 +232,7 @@ export default function Home() {
           ) : (
             <ExpenseList
               expenses={sortedExpenses}
-              categories={mockCategories}
+              categories={categories}
               currentUser={currentUser}
               onDelete={handleDeleteExpense}
             />
@@ -256,7 +256,7 @@ export default function Home() {
             </DrawerHeader>
             <div className="px-4 pb-8">
               <ExpenseForm
-                categories={mockCategories}
+                categories={categories}
                 currentUser={currentUser}
                 onSubmit={handleAddExpense}
                 onCancel={() => setDrawerOpen(false)}
