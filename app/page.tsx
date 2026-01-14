@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -14,17 +14,71 @@ import { ExpenseList } from "@/components/expense-list"
 import { ExpenseForm } from "@/components/expense-form"
 import { MonthSelector } from "@/components/month-selector"
 import { HorizonSplit, FilterZone } from "@/components/horizon-split"
-import { mockExpenses, mockCategories } from "@/lib/mock-data"
+import { UserProfile } from "@/components/user-profile"
+import { mockCategories } from "@/lib/mock-data"
 import { filterExpensesByMonth, calculateMonthlyTotal, formatAmount } from "@/lib/expense-utils"
+import { fetchExpenses, createExpense, deleteExpense } from "@/lib/expense-db"
+import { supabase } from "@/lib/supabase"
 import { Expense, UserRole } from "@/types"
 import { Plus } from "lucide-react"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses)
+  const [expenses, setExpenses] = useState<Expense[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterZone>(null)
-  const currentUser: UserRole = "user1" // À remplacer par la logique d'auth plus tard
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [householdId, setHouseholdId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Déterminer le currentUser basé sur les métadonnées de l'utilisateur
+  const currentUser: UserRole = user?.user_metadata?.role || "user1"
+
+  // Charger l'utilisateur et les dépenses
+  useEffect(() => {
+    // Récupérer l'utilisateur actuel
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      if (user) {
+        // Récupérer le household_id depuis les métadonnées ou la table users
+        setHouseholdId(user.user_metadata?.household_id || null)
+        loadExpenses(user.id, user.user_metadata?.household_id || null)
+      } else {
+        setLoading(false)
+      }
+    })
+
+    // Écouter les changements d'authentification
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      if (currentUser) {
+        const householdId = currentUser.user_metadata?.household_id || null
+        setHouseholdId(householdId)
+        await loadExpenses(currentUser.id, householdId)
+      } else {
+        setExpenses([])
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const loadExpenses = async (userId: string, householdId: string | null) => {
+    try {
+      setLoading(true)
+      const userExpenses = await fetchExpenses(userId, householdId)
+      setExpenses(userExpenses)
+    } catch (error) {
+      console.error("Error loading expenses:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Filtrer les dépenses du mois courant
   const monthlyExpenses = useMemo(() => {
@@ -64,7 +118,7 @@ export default function Home() {
     })
   }, [filteredExpenses])
 
-  const handleAddExpense = (expenseData: {
+  const handleAddExpense = async (expenseData: {
     name: string
     amount: string
     categoryId: string
@@ -72,38 +126,68 @@ export default function Home() {
     isShared: boolean
     logoUrl: string | null
   }) => {
-    const newExpense: Expense = {
-      id: Date.now().toString(),
-      name: expenseData.name,
-      amount: expenseData.amount,
-      categoryId: expenseData.categoryId,
-      paidBy: expenseData.paidBy,
-      isShared: expenseData.isShared,
-      logoUrl: expenseData.logoUrl,
-      description: null,
-      expenseDate: new Date(currentDate),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    if (!user) {
+      console.error("User not authenticated")
+      return
     }
 
-    setExpenses((prev) => [newExpense, ...prev])
-    setDrawerOpen(false)
+    try {
+      const newExpense = await createExpense(
+        {
+          name: expenseData.name,
+          amount: expenseData.amount,
+          categoryId: expenseData.categoryId,
+          paidBy: expenseData.paidBy,
+          isShared: expenseData.isShared,
+          logoUrl: expenseData.logoUrl,
+          description: null,
+          expenseDate: new Date(currentDate),
+        },
+        user.id,
+        householdId
+      )
+
+      setExpenses((prev) => [newExpense, ...prev])
+      setDrawerOpen(false)
+    } catch (error) {
+      console.error("Error adding expense:", error)
+    }
   }
 
-  const handleDeleteExpense = (expenseId: string) => {
-    // TODO: Remplacer par un appel API vers la BDD
-    setExpenses((prev) => prev.filter((expense) => expense.id !== expenseId))
+  const handleDeleteExpense = async (expenseId: string) => {
+    try {
+      await deleteExpense(expenseId)
+      setExpenses((prev) => prev.filter((expense) => expense.id !== expenseId))
+    } catch (error) {
+      console.error("Error deleting expense:", error)
+    }
+  }
+
+  // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
+  useEffect(() => {
+    if (!loading && !user) {
+      window.location.href = "/login"
+    }
+  }, [user, loading])
+
+  if (!user && !loading) {
+    return null
   }
 
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto max-w-2xl px-4 py-6">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-medium mb-2">PILOT</h1>
-          <p className="text-sm text-muted-foreground">
-            Budget mensuel partagé
-          </p>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-medium mb-2">PILOT</h1>
+            <p className="text-sm text-muted-foreground">
+              Budget mensuel partagé
+            </p>
+          </div>
+          {user && (
+            <UserProfile />
+          )}
         </div>
 
         {/* Sélecteur de mois */}
@@ -119,12 +203,18 @@ export default function Home() {
 
         {/* Liste des dépenses */}
         <div className="mb-6">
-          <ExpenseList
-            expenses={sortedExpenses}
-            categories={mockCategories}
-            currentUser={currentUser}
-            onDelete={handleDeleteExpense}
-          />
+          {loading ? (
+            <div className="py-12 text-center text-muted-foreground">
+              <p>Chargement des dépenses...</p>
+            </div>
+          ) : (
+            <ExpenseList
+              expenses={sortedExpenses}
+              categories={mockCategories}
+              currentUser={currentUser}
+              onDelete={handleDeleteExpense}
+            />
+          )}
         </div>
 
         {/* Bouton d'ajout - Drawer sur mobile */}

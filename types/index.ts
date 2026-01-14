@@ -12,6 +12,8 @@ export interface Expense {
   expenseDate: Date;
   createdAt: Date;
   updatedAt: Date;
+  user_id?: string | null;
+  household_id?: string | null;
 }
 
 export interface Category {
