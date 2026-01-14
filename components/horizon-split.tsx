@@ -52,47 +52,44 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   const user2Total = calculateZoneTotal(expenses, "user2", currentUser)
 
   return (
-    <div className="grid grid-cols-3 gap-px border border-border rounded overflow-hidden mb-6">
+    <div className="grid grid-cols-3 gap-3 mb-6">
       <button
         type="button"
         onClick={() => onFilterChange(activeFilter === "user1" ? null : "user1")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 bg-card border-r border-border transition-all duration-200 ease-out",
-          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0 active:scale-[0.98]",
-          activeFilter === "user1" && "opacity-100 bg-accent",
-          activeFilter !== "user1" && "opacity-90"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-white shadow-sm transition-all duration-200 ease-out",
+          "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "user1" && "ring-2 ring-accent shadow-md"
         )}
       >
-        <span className="text-xs text-muted-foreground mb-1 font-medium">Personnel A</span>
-        <span className="text-lg font-medium">{formatAmount(user1Total)}</span>
+        <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel A</span>
+        <span className="text-lg font-medium tracking-tight">{formatAmount(user1Total)}</span>
       </button>
 
       <button
         type="button"
         onClick={() => onFilterChange(activeFilter === "shared" ? null : "shared")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 bg-card border-r border-border transition-all duration-200 ease-out",
-          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0 active:scale-[0.98]",
-          activeFilter === "shared" && "opacity-100 bg-accent",
-          activeFilter !== "shared" && "opacity-90"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-white shadow-sm transition-all duration-200 ease-out",
+          "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "shared" && "ring-2 ring-accent shadow-md"
         )}
       >
-        <span className="text-xs text-muted-foreground mb-1 font-medium">Commun</span>
-        <span className="text-lg font-medium">{formatAmount(sharedTotal)}</span>
+        <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Commun</span>
+        <span className="text-lg font-medium tracking-tight">{formatAmount(sharedTotal)}</span>
       </button>
 
       <button
         type="button"
         onClick={() => onFilterChange(activeFilter === "user2" ? null : "user2")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 bg-card transition-all duration-200 ease-out",
-          "hover:opacity-80 focus:outline-none focus:ring-1 focus:ring-foreground focus:ring-offset-0 active:scale-[0.98]",
-          activeFilter === "user2" && "opacity-100 bg-accent",
-          activeFilter !== "user2" && "opacity-90"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-white shadow-sm transition-all duration-200 ease-out",
+          "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "user2" && "ring-2 ring-accent shadow-md"
         )}
       >
-        <span className="text-xs text-muted-foreground mb-1 font-medium">Personnel B</span>
-        <span className="text-lg font-medium">{formatAmount(user2Total)}</span>
+        <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel B</span>
+        <span className="text-lg font-medium tracking-tight">{formatAmount(user2Total)}</span>
       </button>
     </div>
   )

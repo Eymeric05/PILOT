@@ -81,17 +81,17 @@ export function UserProfile({ children }: UserProfileProps) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-8 space-y-4">
-          <div className="flex items-center gap-4 p-4 border border-border rounded-lg bg-card">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white shadow-sm">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
               <User className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-base truncate">
+              <p className="font-medium text-base truncate tracking-tight">
                 {user.user_metadata?.full_name || user.email?.split("@")[0] || "Utilisateur"}
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground truncate tracking-tight">
                   {user.email}
                 </p>
               </div>
@@ -100,7 +100,7 @@ export function UserProfile({ children }: UserProfileProps) {
           <Button
             variant="outline"
             onClick={handleSignOut}
-            className="w-full gap-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all duration-200"
+            className="w-full gap-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
           >
             <LogOut className="h-4 w-4" />
             Se déconnecter

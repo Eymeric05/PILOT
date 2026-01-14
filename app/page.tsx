@@ -175,10 +175,10 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-2xl px-4 py-6">
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-[600px] px-6 py-8">
         {/* Header */}
-        <header className="mb-8 flex items-center justify-between pb-6 border-b border-border">
+        <header className="mb-8 flex items-center justify-between pb-6">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 shrink-0 flex items-center justify-center">
               <img
@@ -188,8 +188,8 @@ export default function Home() {
               />
             </div>
             <div>
-              <h1 className="text-3xl font-semibold mb-1 text-foreground">PILOT</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-3xl font-semibold mb-1 text-foreground tracking-tight">PILOT</h1>
+              <p className="text-sm text-muted-foreground tracking-tight">
                 Budget mensuel partagé
               </p>
             </div>
@@ -213,7 +213,7 @@ export default function Home() {
         {/* Liste des dépenses */}
         <div className="mb-6">
           {loading ? (
-            <div className="py-12 text-center text-muted-foreground">
+            <div className="py-12 text-center text-muted-foreground tracking-tight">
               <p>Chargement des dépenses...</p>
             </div>
           ) : (
@@ -229,9 +229,9 @@ export default function Home() {
         {/* Bouton d'ajout - Drawer sur mobile */}
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
-            <Button className="fixed bottom-6 right-4 h-14 w-14 rounded-full md:static md:h-11 md:w-auto md:rounded border border-border md:shadow-none">
+            <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full md:static md:h-11 md:w-auto md:rounded-full shadow-sm">
               <Plus className="h-5 w-5 md:mr-2" />
-              <span className="hidden md:inline">Ajouter une dépense</span>
+              <span className="hidden md:inline tracking-tight">Ajouter une dépense</span>
             </Button>
           </DrawerTrigger>
           <DrawerContent>

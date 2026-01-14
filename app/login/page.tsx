@@ -100,7 +100,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-muted/30 flex items-center justify-center px-4 py-8">
+    <main className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -111,18 +111,18 @@ export default function LoginPage() {
                 className="h-full w-full object-contain"
               />
             </div>
-            <h1 className="text-4xl font-bold text-foreground">PILOT</h1>
+            <h1 className="text-4xl font-bold text-foreground tracking-tight">PILOT</h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground tracking-tight">
             Budget mensuel partagé
           </p>
         </div>
-        <div className="border border-border rounded-xl bg-card shadow-sm p-8 space-y-6">
+        <div className="rounded-3xl bg-white shadow-sm p-8 space-y-6">
           <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2 text-foreground">
+            <h2 className="text-xl font-semibold mb-2 text-foreground tracking-tight">
               {isSignUp ? "Créer un compte" : "Connexion"}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground tracking-tight">
               {isSignUp ? "Créez votre compte pour commencer" : "Connectez-vous pour accéder à votre budget"}
             </p>
           </div>
@@ -183,10 +183,10 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              <span className="w-full border-t border-border/50" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Ou</span>
+              <span className="bg-white px-2 text-muted-foreground tracking-tight">Ou</span>
             </div>
           </div>
 

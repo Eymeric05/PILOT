@@ -68,9 +68,9 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {expenses.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
+        <div className="py-12 text-center text-muted-foreground tracking-tight">
           <p>Aucune dépense pour ce mois</p>
         </div>
       ) : (
@@ -82,7 +82,7 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
           return (
             <div
               key={expense.id}
-              className="flex items-center gap-3 border border-border rounded bg-card p-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              className="flex items-center gap-3 rounded-2xl bg-white shadow-sm p-4 animate-in fade-in slide-in-from-bottom-2 duration-200"
             >
               {/* Logo ou icône générique */}
               <LogoDisplay logoUrl={expense.logoUrl} name={expense.name} />
@@ -90,17 +90,17 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
               {/* Informations de la dépense */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium truncate text-sm">{expense.name}</p>
+                  <p className="font-medium truncate text-sm tracking-tight">{expense.name}</p>
                   {expense.isShared && (
                     <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground tracking-tight">
                     {categoryIcon} {categoryName}
                   </span>
                   <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground tracking-tight">
                     {expense.paidBy === currentUser ? "Vous" : "Partenaire"}
                   </span>
                 </div>
@@ -108,9 +108,9 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
 
               {/* Montant */}
               <div className="text-right shrink-0">
-                <p className="font-medium">{formatAmount(displayAmount)}</p>
+                <p className="font-medium tracking-tight">{formatAmount(displayAmount)}</p>
                 {expense.isShared && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground tracking-tight">
                     sur {formatAmount(expense.amount)}
                   </p>
                 )}
@@ -121,7 +121,7 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: Exp
                 <button
                   type="button"
                   onClick={() => onDelete(expense.id)}
-                  className="ml-2 p-1 rounded hover:bg-muted transition-all duration-200 ease-out opacity-60 hover:opacity-100 active:scale-95"
+                  className="ml-2 p-1.5 rounded-full hover:bg-muted transition-all duration-200 ease-out opacity-60 hover:opacity-100 active:scale-95"
                   aria-label="Supprimer la dépense"
                 >
                   <X className="h-4 w-4 text-muted-foreground" />
