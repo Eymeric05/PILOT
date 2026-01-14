@@ -100,26 +100,26 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+    <main className="min-h-screen bg-muted/30 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-12 w-12">
+            <div className="h-14 w-14 flex items-center justify-center">
               <img
                 src="/img/PILOT_logo.webp"
                 alt="PILOT"
                 className="h-full w-full object-contain"
               />
             </div>
-            <h1 className="text-3xl font-medium">PILOT</h1>
+            <h1 className="text-4xl font-bold text-foreground">PILOT</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             Budget mensuel partagé
           </p>
         </div>
-        <div className="border border-border rounded-lg bg-card p-6 md:p-8 space-y-5">
+        <div className="border border-border rounded-xl bg-card shadow-sm p-8 space-y-6">
           <div className="text-center">
-            <h2 className="text-lg font-medium mb-1">
+            <h2 className="text-xl font-semibold mb-2 text-foreground">
               {isSignUp ? "Créer un compte" : "Connexion"}
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -156,13 +156,13 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
                 {error}
               </div>
             )}
 
             {message && (
-              <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="text-sm text-secondary-foreground bg-secondary/50 border border-border rounded-lg p-3">
                 {message}
               </div>
             )}

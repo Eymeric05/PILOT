@@ -176,11 +176,11 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-2xl px-4 py-4 md:py-6">
+      <div className="container mx-auto max-w-2xl px-4 py-6">
         {/* Header */}
-        <header className="mb-6 flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 shrink-0">
+        <header className="mb-8 flex items-center justify-between pb-6 border-b border-border">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 shrink-0 flex items-center justify-center">
               <img
                 src="/img/PILOT_logo.webp"
                 alt="PILOT"
@@ -188,7 +188,7 @@ export default function Home() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-medium mb-0.5">PILOT</h1>
+              <h1 className="text-3xl font-semibold mb-1 text-foreground">PILOT</h1>
               <p className="text-sm text-muted-foreground">
                 Budget mensuel partagé
               </p>
