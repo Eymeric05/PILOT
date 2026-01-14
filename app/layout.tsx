@@ -1,21 +1,22 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
   title: "PILOT",
   description: "Gestion de budget mensuel partagé",
   manifest: "/manifest.json",
-  themeColor: "#334155",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "PILOT",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#334155",
 }
 
 export default function RootLayout({
