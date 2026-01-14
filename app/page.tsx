@@ -35,19 +35,41 @@ export default function Home() {
   // Déterminer le currentUser basé sur les métadonnées de l'utilisateur
   const currentUser: UserRole = user?.user_metadata?.role || "user1"
 
+  const loadExpenses = async (userId: string, householdId: string | null) => {
+    try {
+      const userExpenses = await fetchExpenses(userId, householdId)
+      setExpenses(userExpenses)
+    } catch (error) {
+      console.error("Error loading expenses:", error)
+    }
+  }
+
   // Charger l'utilisateur et les dépenses
   useEffect(() => {
-    // Récupérer l'utilisateur actuel
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      if (user) {
-        // Récupérer le household_id depuis les métadonnées ou la table users
-        setHouseholdId(user.user_metadata?.household_id || null)
-        loadExpenses(user.id, user.user_metadata?.household_id || null)
-      } else {
+    const checkUser = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error) throw error
+        
+        if (user) {
+          setUser(user)
+          const householdId = user.user_metadata?.household_id || null
+          setHouseholdId(householdId)
+          await loadExpenses(user.id, householdId)
+        } else {
+          window.location.href = "/login"
+          return
+        }
+      } catch (error) {
+        console.error("Error checking user:", error)
+        window.location.href = "/login"
+        return
+      } finally {
         setLoading(false)
       }
-    })
+    }
+
+    checkUser()
 
     // Écouter les changements d'authentification
     const {
@@ -61,24 +83,12 @@ export default function Home() {
         await loadExpenses(currentUser.id, householdId)
       } else {
         setExpenses([])
-        setLoading(false)
+        window.location.href = "/login"
       }
     })
 
     return () => subscription.unsubscribe()
   }, [])
-
-  const loadExpenses = async (userId: string, householdId: string | null) => {
-    try {
-      setLoading(true)
-      const userExpenses = await fetchExpenses(userId, householdId)
-      setExpenses(userExpenses)
-    } catch (error) {
-      console.error("Error loading expenses:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Filtrer les dépenses du mois courant
   const monthlyExpenses = useMemo(() => {
@@ -163,20 +173,23 @@ export default function Home() {
     }
   }
 
-  // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
-  useEffect(() => {
-    if (!loading && !user) {
-      window.location.href = "/login"
-    }
-  }, [user, loading])
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground tracking-tight">Chargement...</p>
+        </div>
+      </main>
+    )
+  }
 
-  if (!user && !loading) {
+  if (!user) {
     return null
   }
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-md px-4 py-6">
+      <div className="mx-auto max-w-md md:max-w-2xl lg:max-w-3xl px-4 py-6">
         {/* Header */}
         <header className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">

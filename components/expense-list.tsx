@@ -2,7 +2,8 @@
 
 import { Expense, Category } from "@/types"
 import { formatAmount, getDisplayAmount } from "@/lib/expense-utils"
-import { CreditCard, Users, X } from "lucide-react"
+import { getClearbitLogoUrl, getGoogleFaviconUrl } from "@/lib/logo-utils"
+import { Users, X } from "lucide-react"
 import { useState } from "react"
 
 interface ExpenseListProps {
@@ -13,42 +14,88 @@ interface ExpenseListProps {
 }
 
 function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; name: string }) {
-  const [hasError, setHasError] = useState(false)
+  const [useFallback, setUseFallback] = useState(false)
+  const [useInitial, setUseInitial] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
-  if (!logoUrl || hasError) {
+  // Générer la première lettre pour le fallback
+  const getInitial = (text: string): string => {
+    if (!text || text.length === 0) return "?"
+    return text.trim().charAt(0).toUpperCase()
+  }
+
+  // Générer une couleur basée sur le nom (pour la cohérence)
+  const getColorFromName = (text: string): string => {
+    const colors = [
+      "bg-blue-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-red-500",
+      "bg-orange-500",
+      "bg-yellow-500",
+      "bg-green-500",
+      "bg-teal-500",
+      "bg-cyan-500",
+      "bg-indigo-500",
+    ]
+    if (!text) return colors[0]
+    const index = text.charCodeAt(0) % colors.length
+    return colors[index]
+  }
+
+  // Si on utilise l'initiale (dernier recours)
+  if (useInitial) {
     return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted">
-        <CreditCard className="h-5 w-5 text-muted-foreground" />
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${getColorFromName(name)}`}>
+        <span className="text-sm font-semibold text-white">{getInitial(name)}</span>
       </div>
     )
   }
 
-  // Convertir l'URL en niveaux de gris si elle ne l'est pas déjà
-  let greyscaleUrl = logoUrl
-  let colorUrl = logoUrl
-  
-  if (logoUrl.includes("greyscale=true")) {
-    // Si déjà en niveaux de gris, extraire l'URL couleur
-    colorUrl = logoUrl.replace(/[?&]greyscale=true/, "").replace(/[?&]$/, "")
+  // Déterminer l'URL à utiliser
+  let imageUrl: string
+  if (useFallback) {
+    // Utiliser Google Favicon en secours
+    imageUrl = getGoogleFaviconUrl(name)
+  } else if (logoUrl) {
+    // Utiliser l'URL Clearbit stockée
+    imageUrl = logoUrl
   } else {
-    // Ajouter le paramètre greyscale
-    greyscaleUrl = logoUrl.includes("?") 
-      ? `${logoUrl}&greyscale=true`
-      : `${logoUrl}?greyscale=true`
+    // Générer l'URL Clearbit à partir du nom
+    imageUrl = getClearbitLogoUrl(name, true)
+  }
+
+  // Convertir l'URL en niveaux de gris si c'est Clearbit
+  let greyscaleUrl = imageUrl
+  let colorUrl = imageUrl
+  
+  if (imageUrl.includes("clearbit.com") && imageUrl.includes("greyscale=true")) {
+    colorUrl = imageUrl.replace(/[?&]greyscale=true/, "").replace(/[?&]$/, "")
+  } else if (imageUrl.includes("clearbit.com") && !imageUrl.includes("greyscale=true")) {
+    greyscaleUrl = imageUrl.includes("?") 
+      ? `${imageUrl}&greyscale=true`
+      : `${imageUrl}?greyscale=true`
   }
 
   return (
-      <div 
+    <div 
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <img
-        src={isHovered ? colorUrl : greyscaleUrl}
+        src={isHovered && imageUrl.includes("clearbit.com") ? colorUrl : greyscaleUrl}
         alt={name}
         className="h-8 w-8 rounded object-contain transition-opacity duration-300 ease-out"
-        onError={() => setHasError(true)}
+        onError={() => {
+          if (!useFallback) {
+            // Essayer Google Favicon en secours
+            setUseFallback(true)
+          } else {
+            // Afficher la première lettre si même Google Favicon échoue
+            setUseInitial(true)
+          }
+        }}
       />
     </div>
   )

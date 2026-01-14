@@ -26,11 +26,20 @@ export function UserProfile({ children }: UserProfileProps) {
   const router = useRouter()
 
   useEffect(() => {
-    // Récupérer l'utilisateur actuel
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      setLoading(false)
-    })
+    const checkUser = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error) throw error
+        setUser(user)
+      } catch (error) {
+        console.error("Error getting user:", error)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkUser()
 
     // Écouter les changements d'authentification
     const {
@@ -38,12 +47,12 @@ export function UserProfile({ children }: UserProfileProps) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (!session?.user) {
-        router.push("/login")
+        window.location.href = "/login"
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [router])
+  }, [])
 
   const handleSignOut = async () => {
     try {

@@ -81,13 +81,16 @@ export function ExpenseForm({
     e.preventDefault()
     if (!name || !amount || !categoryId) return
 
+    // Générer l'URL du logo si elle n'existe pas déjà
+    const finalLogoUrl = logoUrl || getClearbitLogoUrl(name.trim(), true)
+
     onSubmit({
       name: name.trim(),
       amount,
       categoryId,
       paidBy,
       isShared,
-      logoUrl,
+      logoUrl: finalLogoUrl,
     })
 
     // Reset form
