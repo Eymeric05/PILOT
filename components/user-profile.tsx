@@ -14,7 +14,6 @@ import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { User, LogOut, Mail } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
-import { DarkModeToggle } from "@/components/dark-mode-toggle"
 
 interface UserProfileProps {
   children?: React.ReactNode
@@ -108,19 +107,14 @@ export function UserProfile({ children }: UserProfileProps) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <DarkModeToggle />
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              className="flex-1 gap-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
-            >
-              <LogOut className="h-4 w-4" />
-              Se déconnecter
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={handleSignOut}
+            className="w-full gap-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+          >
+            <LogOut className="h-4 w-4" />
+            Se déconnecter
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>

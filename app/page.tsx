@@ -15,6 +15,7 @@ import { ExpenseForm } from "@/components/expense-form"
 import { MonthSelector } from "@/components/month-selector"
 import { HorizonSplit, FilterZone } from "@/components/horizon-split"
 import { UserProfile } from "@/components/user-profile"
+import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import { mockCategories } from "@/lib/mock-data"
 import { filterExpensesByMonth, calculateMonthlyTotal, formatAmount } from "@/lib/expense-utils"
 import { fetchExpenses, createExpense, deleteExpense } from "@/lib/expense-db"
@@ -208,7 +209,10 @@ export default function Home() {
             </div>
           </div>
           {user && (
-            <UserProfile />
+            <div className="flex items-center gap-2">
+              <DarkModeToggle />
+              <UserProfile />
+            </div>
           )}
         </header>
 
