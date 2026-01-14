@@ -100,8 +100,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center">
-      <div className="container mx-auto max-w-md px-4">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-12 w-12">
@@ -117,13 +117,18 @@ export default function LoginPage() {
             Budget mensuel partagé
           </p>
         </div>
-        <div className="border border-border rounded bg-card p-6 space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
-            {isSignUp ? "Créez un compte" : "Connectez-vous pour accéder à votre budget"}
-          </p>
+        <div className="border border-border rounded-lg bg-card p-6 md:p-8 space-y-5">
+          <div className="text-center">
+            <h2 className="text-lg font-medium mb-1">
+              {isSignUp ? "Créer un compte" : "Connexion"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {isSignUp ? "Créez votre compte pour commencer" : "Connectez-vous pour accéder à votre budget"}
+            </p>
+          </div>
 
           {/* Formulaire email/mot de passe */}
-          <form onSubmit={handleEmailAuth} className="space-y-4">
+          <form onSubmit={handleEmailAuth} className="space-y-4" noValidate>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -151,13 +156,13 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded p-2">
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                 {error}
               </div>
             )}
 
             {message && (
-              <div className="text-sm text-green-500 bg-green-500/10 border border-green-500/20 rounded p-2">
+              <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">
                 {message}
               </div>
             )}
@@ -197,7 +202,7 @@ export default function LoginPage() {
           </Button>
 
           {/* Toggle inscription/connexion */}
-          <div className="text-center text-sm">
+          <div className="text-center text-sm pt-2">
             <button
               type="button"
               onClick={() => {
@@ -205,7 +210,7 @@ export default function LoginPage() {
                 setError(null)
                 setMessage(null)
               }}
-              className="text-muted-foreground hover:text-foreground underline"
+              className="text-muted-foreground hover:text-foreground transition-colors duration-200 underline underline-offset-2"
               disabled={loading}
             >
               {isSignUp

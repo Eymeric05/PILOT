@@ -176,9 +176,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-2xl px-4 py-6">
+      <div className="container mx-auto max-w-2xl px-4 py-4 md:py-6">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between">
+        <header className="mb-6 flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 shrink-0">
               <img
@@ -197,7 +197,7 @@ export default function Home() {
           {user && (
             <UserProfile />
           )}
-        </div>
+        </header>
 
         {/* Sélecteur de mois */}
         <MonthSelector currentDate={currentDate} onDateChange={setCurrentDate} />

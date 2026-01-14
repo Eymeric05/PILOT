@@ -11,6 +11,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 import { User, LogOut, Mail } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
@@ -22,6 +23,7 @@ export function UserProfile({ children }: UserProfileProps) {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     // Récupérer l'utilisateur actuel
@@ -35,14 +37,22 @@ export function UserProfile({ children }: UserProfileProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (!session?.user) {
+        router.push("/login")
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [router])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setDrawerOpen(false)
+    try {
+      await supabase.auth.signOut()
+      setDrawerOpen(false)
+      router.push("/login")
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
   }
 
   if (loading) {
@@ -71,28 +81,26 @@ export function UserProfile({ children }: UserProfileProps) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-8 space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 border border-border rounded bg-card">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                <User className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">
-                  {user.user_metadata?.full_name || user.email?.split("@")[0] || "Utilisateur"}
+          <div className="flex items-center gap-4 p-4 border border-border rounded-lg bg-card">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <User className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-base truncate">
+                {user.user_metadata?.full_name || user.email?.split("@")[0] || "Utilisateur"}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground truncate">
+                  {user.email}
                 </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <Mail className="h-3 w-3 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user.email}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
           <Button
             variant="outline"
             onClick={handleSignOut}
-            className="w-full gap-2"
+            className="w-full gap-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all duration-200"
           >
             <LogOut className="h-4 w-4" />
             Se déconnecter
