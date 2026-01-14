@@ -8,7 +8,7 @@ Application web PWA de gestion de budget mensuel partagé pour deux personnes.
 - **Langage**: TypeScript
 - **Styles**: Tailwind CSS + shadcn/ui
 - **Icônes**: Lucide React
-- **Base de données**: PostgreSQL avec Drizzle ORM
+- **Base de données**: Supabase
 - **Hébergement**: Vercel
 
 ## Configuration
@@ -24,13 +24,7 @@ cp .env.example .env
 # Éditer .env avec vos propres valeurs
 ```
 
-3. Générer les migrations de base de données :
-```bash
-npm run db:generate
-npm run db:migrate
-```
-
-4. Lancer le serveur de développement :
+3. Lancer le serveur de développement :
 ```bash
 npm run dev
 ```
@@ -39,7 +33,6 @@ npm run dev
 
 - `/app` - Pages et routes Next.js (App Router)
 - `/components` - Composants React réutilisables
-- `/db` - Schéma et configuration Drizzle ORM
 - `/lib` - Utilitaires et helpers
 - `/types` - Types TypeScript
 - `/public` - Fichiers statiques (manifest, icons)
