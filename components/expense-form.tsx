@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Category, UserRole } from "@/types"
-import { getClearbitLogoUrl } from "@/lib/logo-utils"
+import { getLogoDevUrl } from "@/lib/logo-utils" // Changé pour Logo.dev
 import { CreditCard } from "lucide-react"
 import Image from "next/image"
 
@@ -42,18 +42,25 @@ export function ExpenseForm({
 }: ExpenseFormProps) {
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
-  const [categoryId, setCategoryId] = useState(categories[0]?.id || "")
-  const [paidBy, setPaidBy] = useState<UserRole>(userId)
+  // Sécurisation de la catégorie initiale
+  const [categoryId, setCategoryId] = useState("")
+  const [paidBy, setPaidBy] = useState<UserRole>(userId || "")
   const [isShared, setIsShared] = useState(true)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
-  const [isLoadingLogo, setIsLoadingLogo] = useState(false)
   const [expenseDate, setExpenseDate] = useState<string>(() => {
     const today = new Date()
     return today.toISOString().split("T")[0]
   })
   const [isRecurring, setIsRecurring] = useState(false)
 
-  // Débounce pour récupérer le logo
+  // Synchroniser le categoryId quand les catégories chargent depuis la BDD
+  useEffect(() => {
+    if (categories.length > 0 && !categoryId) {
+      setCategoryId(categories[0].id)
+    }
+  }, [categories, categoryId])
+
+  // Débounce pour récupérer le logo via Logo.dev
   useEffect(() => {
     if (!name || name.length < 2) {
       setLogoUrl(null)
@@ -61,25 +68,9 @@ export function ExpenseForm({
     }
 
     const timer = setTimeout(() => {
-      setIsLoadingLogo(true)
-      const url = getClearbitLogoUrl(name, true) // En niveaux de gris par défaut
+      const url = getLogoDevUrl(name) // Utilisation de Logo.dev
       if (url) {
-        // On teste si le logo existe en essayant de le charger
-        // Si ça échoue, on garde null, sinon on garde l'URL
-        // Utiliser window.Image pour éviter le conflit avec next/image
-        const testImg = new window.Image()
-        testImg.onload = () => {
-          setLogoUrl(url)
-          setIsLoadingLogo(false)
-        }
-        testImg.onerror = () => {
-          setLogoUrl(null)
-          setIsLoadingLogo(false)
-        }
-        testImg.src = url
-      } else {
-        setLogoUrl(null)
-        setIsLoadingLogo(false)
+        setLogoUrl(url)
       }
     }, 500)
 
@@ -90,14 +81,14 @@ export function ExpenseForm({
     e.preventDefault()
     if (!name || !amount || !categoryId) return
 
-    // Forcer l'appel à getClearbitLogoUrl au moment du submit pour que logo_url soit bien envoyé à la BDD
-    const finalLogoUrl = getClearbitLogoUrl(name.trim(), true)
+    // Utilisation finale de l'URL Logo.dev pour la BDD
+    const finalLogoUrl = getLogoDevUrl(name.trim())
 
     onSubmit({
       name: name.trim(),
       amount,
       categoryId,
-      paidBy,
+      paidBy: paidBy || userId,
       isShared,
       logoUrl: finalLogoUrl,
       expenseDate: new Date(expenseDate),
@@ -107,32 +98,25 @@ export function ExpenseForm({
     // Reset form
     setName("")
     setAmount("")
-    setCategoryId(categories[0]?.id || "")
-    setPaidBy(userId)
     setIsShared(true)
     setLogoUrl(null)
-    setExpenseDate(() => {
-      const today = new Date()
-      return today.toISOString().split("T")[0]
-    })
     setIsRecurring(false)
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Nom avec logo preview */}
       <div className="space-y-2">
         <Label htmlFor="name">Nom de la dépense</Label>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted overflow-hidden border">
             {logoUrl ? (
               <Image
                 src={logoUrl}
-                alt={name || "Logo"}
-                width={32}
-                height={32}
-                className="h-8 w-8 rounded object-contain"
-                onError={() => setLogoUrl(null)}
+                alt={name}
+                width={40}
+                height={40}
+                className="h-full w-full object-contain"
+                unoptimized // Nécessaire pour les URLs externes dynamiques comme Logo.dev
               />
             ) : (
               <CreditCard className="h-5 w-5 text-muted-foreground" />
@@ -142,20 +126,18 @@ export function ExpenseForm({
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ex: EDF, Carrefour..."
+            placeholder="Ex: Netflix, Carrefour..."
             required
           />
         </div>
       </div>
 
-      {/* Montant */}
       <div className="space-y-2">
         <Label htmlFor="amount">Montant (€)</Label>
         <Input
           id="amount"
           type="number"
           step="0.01"
-          min="0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0.00"
@@ -163,12 +145,11 @@ export function ExpenseForm({
         />
       </div>
 
-      {/* Catégorie */}
       <div className="space-y-2">
         <Label htmlFor="category">Catégorie</Label>
         <Select value={categoryId} onValueChange={setCategoryId}>
           <SelectTrigger id="category">
-            <SelectValue />
+            <SelectValue placeholder="Choisir une catégorie" />
           </SelectTrigger>
           <SelectContent>
             {categories.map((category) => (
@@ -180,7 +161,6 @@ export function ExpenseForm({
         </Select>
       </div>
 
-      {/* Date */}
       <div className="space-y-2">
         <Label htmlFor="expenseDate">Date de la dépense</Label>
         <Input
@@ -192,7 +172,6 @@ export function ExpenseForm({
         />
       </div>
 
-      {/* Payé par */}
       <div className="space-y-2">
         <Label htmlFor="paidBy">Payé par</Label>
         <Select value={paidBy} onValueChange={(value) => setPaidBy(value as UserRole)}>
@@ -200,55 +179,41 @@ export function ExpenseForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={userId}>Moi</SelectItem>
+            <SelectItem value={userId || "user"}>Moi</SelectItem>
             <SelectItem value="partner">Partenaire</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Partage */}
-      <div className="flex items-center gap-3 py-2">
+      <div className="flex items-center gap-3 py-1">
         <input
           type="checkbox"
           id="isShared"
           checked={isShared}
           onChange={(e) => setIsShared(e.target.checked)}
-          className="h-5 w-5 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+          className="h-4 w-4 rounded border-gray-300"
         />
-        <Label htmlFor="isShared" className="cursor-pointer font-normal">
-          Partager la dépense (divisé par 2)
-        </Label>
+        <Label htmlFor="isShared" className="text-sm font-normal">Partager la dépense</Label>
       </div>
 
-      {/* Récurrence */}
-      <div className="flex items-center gap-3 py-2">
+      <div className="flex items-center gap-3 py-1">
         <input
           type="checkbox"
           id="isRecurring"
           checked={isRecurring}
           onChange={(e) => setIsRecurring(e.target.checked)}
-          className="h-5 w-5 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+          className="h-4 w-4 rounded border-gray-300"
         />
-        <Label htmlFor="isRecurring" className="cursor-pointer font-normal">
-          Dépense récurrente (chaque mois pendant 12 mois)
-        </Label>
+        <Label htmlFor="isRecurring" className="text-sm font-normal">Répéter chaque mois (12 mois)</Label>
       </div>
 
-      {/* Boutons */}
       <div className="flex gap-3 pt-4">
         {onCancel && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            className="flex-1"
-          >
+          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
             Annuler
           </Button>
         )}
-        <Button type="submit" className="flex-1">
-          Ajouter
-        </Button>
+        <Button type="submit" className="flex-1">Ajouter</Button>
       </div>
     </form>
   )
