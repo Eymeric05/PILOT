@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Expense, Category, UserRole } from "@/types"
+import { useState } from "react"  
+import { Expense, Category, UserRole } from "@/types" 
 import { formatAmount } from "@/lib/expense-utils"
-// CORRECTION : Import depuis logo-utils et non expense-db
 import { getClearbitLogoUrl, getGoogleFaviconUrl } from "@/lib/logo-utils"
 import { Users, X } from "lucide-react"
 import Image from "next/image"
