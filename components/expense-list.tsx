@@ -57,7 +57,15 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
   )
 }
 
-export function ExpenseList({ expenses, categories, currentUser, onDelete }: any) {
+interface ExpenseListProps {
+  expenses: any[]
+  categories: any[]
+  currentUser: any
+  onDelete?: (id: string) => void
+  activeFilter?: "user1" | "shared" | "user2" | null
+}
+
+export function ExpenseList({ expenses, categories, currentUser, onDelete, activeFilter }: ExpenseListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -124,6 +132,11 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
                   <span>{categories.find((c: Category) => c.id === expense.categoryId)?.name}</span>
                 </p>
               )}
+              {expense.description && (
+                <p className="text-xs text-muted-foreground/80 italic mt-1 truncate">
+                  {expense.description}
+                </p>
+              )}
             </div>
             
             <div className="text-right shrink-0 relative z-10 pr-12">
@@ -133,7 +146,14 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-xl font-bold tracking-tight"
               >
-                {formatAmount(expense.amount)}
+                {(() => {
+                  // Si on filtre par user1 ou user2 et que la dépense est partagée, afficher la moitié
+                  if ((activeFilter === "user1" || activeFilter === "user2") && expense.isShared) {
+                    return formatAmount(parseFloat(expense.amount) / 2)
+                  }
+                  // Sinon, afficher le montant complet
+                  return formatAmount(expense.amount)
+                })()}
               </motion.p>
             </div>
             
