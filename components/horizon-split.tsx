@@ -85,7 +85,7 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         return (
           <motion.button
             key={card.filter}
-            ref={(el) => (cardRefs.current[index] = el)}
+            ref={(el) => { cardRefs.current[index] = el; }}
             type="button"
             onClick={() => onFilterChange(isActive ? null : card.filter)}
             whileHover={{ 
