@@ -50,14 +50,10 @@ export default function Home() {
 
   const loadCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name", { ascending: true })
+      const { data } = await supabase.from("categories").select("*")
 
-      if (error) {
-        console.error("Error fetching categories:", error)
-        // Si la table est vide, créer les catégories par défaut
+      // Fonction de sécurité : si data est vide, insérer les catégories par défaut
+      if (!data || data.length === 0) {
         const defaultCategories = [
           { name: "Alimentation", icon: "🛒" },
           { name: "Logement", icon: "🏠" },
@@ -73,40 +69,6 @@ export default function Home() {
         if (insertError) {
           console.error("Error creating default categories:", insertError)
           // Retourner les catégories par défaut en mémoire
-          setCategories(
-            defaultCategories.map((cat, index) => ({
-              id: `default-${index}`,
-              name: cat.name,
-              icon: cat.icon,
-              createdAt: new Date(),
-            }))
-          )
-        } else {
-          setCategories(
-            (insertedData || []).map((cat: any) => ({
-              id: cat.id,
-              name: cat.name,
-              icon: cat.icon,
-              createdAt: new Date(cat.created_at),
-            }))
-          )
-        }
-      } else if (!data || data.length === 0) {
-        // Table vide, créer les catégories par défaut
-        const defaultCategories = [
-          { name: "Alimentation", icon: "🛒" },
-          { name: "Logement", icon: "🏠" },
-          { name: "Transport", icon: "🚗" },
-          { name: "Loisirs", icon: "🎉" },
-        ]
-
-        const { data: insertedData, error: insertError } = await supabase
-          .from("categories")
-          .insert(defaultCategories)
-          .select()
-
-        if (insertError) {
-          console.error("Error creating default categories:", insertError)
           setCategories(
             defaultCategories.map((cat, index) => ({
               id: `default-${index}`,
@@ -343,7 +305,9 @@ export default function Home() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-foreground tracking-tight">PILOT</h1>
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+                {user?.user_metadata?.display_name || user?.email?.split("@")[0] || "PILOT"}
+              </h1>
               <p className="text-xs text-muted-foreground tracking-tight">
                 Budget mensuel partagé
               </p>

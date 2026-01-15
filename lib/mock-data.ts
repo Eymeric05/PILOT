@@ -1,14 +1,4 @@
-import { Expense, Category, UserRole } from "@/types";
-
-export const mockCategories: Category[] = [
-  { id: "1", name: "Alimentation", icon: "🍔", createdAt: new Date() },
-  { id: "2", name: "Transport", icon: "🚗", createdAt: new Date() },
-  { id: "3", name: "Logement", icon: "🏠", createdAt: new Date() },
-  { id: "4", name: "Santé", icon: "💊", createdAt: new Date() },
-  { id: "5", name: "Shopping", icon: "🛍️", createdAt: new Date() },
-  { id: "6", name: "Loisirs", icon: "🎬", createdAt: new Date() },
-  { id: "7", name: "Autres", icon: "📦", createdAt: new Date() },
-];
+import { Expense, UserRole } from "@/types";
 
 // Générer des dates pour le mois courant
 const now = new Date()

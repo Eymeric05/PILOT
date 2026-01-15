@@ -90,8 +90,8 @@ export function ExpenseForm({
     e.preventDefault()
     if (!name || !amount || !categoryId) return
 
-    // Générer l'URL du logo si elle n'existe pas déjà
-    const finalLogoUrl = logoUrl || getClearbitLogoUrl(name.trim(), true)
+    // Forcer l'appel à getClearbitLogoUrl au moment du submit pour que logo_url soit bien envoyé à la BDD
+    const finalLogoUrl = getClearbitLogoUrl(name.trim(), true)
 
     onSubmit({
       name: name.trim(),
@@ -201,7 +201,7 @@ export function ExpenseForm({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={userId}>Moi</SelectItem>
-            <SelectItem value="partner">Mon partenaire</SelectItem>
+            <SelectItem value="partner">Partenaire</SelectItem>
           </SelectContent>
         </Select>
       </div>

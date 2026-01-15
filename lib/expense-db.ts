@@ -13,7 +13,7 @@ export async function fetchExpenses(userId: string, householdId?: string | null)
     query = query.eq("user_id", userId)
   }
 
-  query = query.order("expense_date", { ascending: false })
+  query = query.order("date", { ascending: false })
 
   const { data, error } = await query
 
@@ -32,7 +32,7 @@ export async function fetchExpenses(userId: string, householdId?: string | null)
     isShared: expense.is_shared,
     logoUrl: expense.logo_url,
     description: expense.description || null,
-    expenseDate: new Date(expense.expense_date),
+    expenseDate: new Date(expense.date || expense.expense_date),
     createdAt: new Date(expense.created_at),
     updatedAt: new Date(expense.updated_at),
     user_id: expense.user_id,
@@ -61,7 +61,7 @@ export async function createExpense(
         paid_by: expense.paidBy,
         is_shared: expense.isShared,
         logo_url: expense.logoUrl,
-        expense_date: expenseDate.toISOString(),
+        date: expenseDate.toISOString(),
         user_id: userId,
         household_id: householdId,
       })
@@ -75,7 +75,7 @@ export async function createExpense(
       paid_by: expense.paidBy,
       is_shared: expense.isShared,
       logo_url: expense.logoUrl,
-      expense_date: expense.expenseDate.toISOString(),
+      date: expense.expenseDate.toISOString(),
       user_id: userId,
       household_id: householdId,
     })
@@ -87,11 +87,13 @@ export async function createExpense(
     .select()
 
   if (error) {
-    console.error("Error creating expense:", error)
-    console.log("Error details:", JSON.stringify(error, null, 2))
-    // Afficher l'erreur SQL brute complète
-    const errorMessage = JSON.stringify(error, null, 2)
-    alert(`Erreur SQL lors de l'ajout de la dépense:\n\n${errorMessage}`)
+    // Log détaillé de l'erreur Supabase complète
+    console.error("Error creating expense - Full error object:", error)
+    console.error("Error message:", error.message)
+    console.error("Error details:", error.details)
+    console.error("Error hint:", error.hint)
+    console.error("Error code:", error.code)
+    console.error("Full error JSON:", JSON.stringify(error, null, 2))
     throw error
   }
 
@@ -105,7 +107,7 @@ export async function createExpense(
     isShared: exp.is_shared,
     logoUrl: exp.logo_url,
     description: exp.description || null,
-    expenseDate: new Date(exp.expense_date),
+    expenseDate: new Date(exp.date || exp.expense_date),
     createdAt: new Date(exp.created_at),
     updatedAt: new Date(exp.updated_at),
     user_id: exp.user_id,
