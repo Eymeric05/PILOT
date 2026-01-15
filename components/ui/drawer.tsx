@@ -39,14 +39,14 @@ const DrawerContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DrawerPortal>
-    <DrawerOverlay className="animate-in fade-in duration-300" />
+    <DrawerOverlay style={{ animation: 'fade-in 0.3s ease-out' }} />
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
         "fixed inset-x-0 bottom-0 z-50 mt-8 sm:mt-16 flex h-auto flex-col rounded-t-3xl bg-popover border-t border-border/50",
-        "animate-in slide-in-from-bottom duration-300 ease-out",
         className
       )}
+      style={{ animation: 'slide-in-from-bottom 0.3s ease-out' }}
       {...props}
     >
       <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-muted" />

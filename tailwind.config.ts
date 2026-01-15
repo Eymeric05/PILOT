@@ -8,6 +8,21 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
 	],
+  safelist: [
+    'rounded-2xl',
+    'rounded-3xl',
+    'rounded-xl',
+    'border-border/50',
+    'border-border/30',
+    'border-border/20',
+    'bg-card/80',
+    'bg-accent/5',
+    'border-accent/50',
+    'ring-accent/20',
+    'hover:-translate-y-0.5',
+    'tracking-tight',
+    'font-semibold',
+  ],
   prefix: "",
   theme: {
     container: {
@@ -72,8 +87,8 @@ const config = {
           to: { opacity: "1" },
         },
         "slide-in-from-bottom": {
-          from: { transform: "translateY(8px)" },
-          to: { transform: "translateY(0)" },
+          from: { transform: "translateY(8px)", opacity: "0" },
+          to: { transform: "translateY(0)", opacity: "1" },
         },
       },
       animation: {

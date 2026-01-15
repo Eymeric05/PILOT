@@ -46,11 +46,9 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
           key={expense.id} 
           className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4 h-20
                      transition-all duration-200 ease-out
-                     hover:bg-card/80 hover:-translate-y-0.5 hover:border-border
-                     animate-in fade-in slide-in-from-bottom-2"
+                     hover:bg-card/80 hover:-translate-y-0.5 hover:border-border"
           style={{
-            animationDelay: mounted ? `${index * 50}ms` : '0ms',
-            animationFillMode: 'both',
+            animation: mounted ? `fade-in 0.3s ease-out ${index * 50}ms both, slide-in-from-bottom 0.3s ease-out ${index * 50}ms both` : 'none',
           }}
         >
           <LogoDisplay logoUrl={expense.logoUrl} name={expense.name} />
