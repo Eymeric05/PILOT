@@ -296,6 +296,7 @@ export default function Home() {
             expenses={sortedExpenses}
             categories={categories}
             currentUser={currentUser}
+            activeFilter={activeFilter}
             onDelete={async (id: string) => {
               await deleteExpense(id)
               setExpenses(prev => prev.filter(e => e.id !== id))

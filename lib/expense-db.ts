@@ -19,6 +19,7 @@ export async function fetchExpenses(userId: string, householdId?: string | null)
     paidBy: exp.paid_by, // Aligné sur SQL
     isShared: exp.is_shared,
     logoUrl: exp.logo_url,
+    description: exp.description || null,
     expenseDate: new Date(exp.expense_date),
     createdAt: new Date(exp.created_at),
     user_id: exp.user_id,
@@ -39,6 +40,7 @@ export async function createExpense(expense: any, userId: string, householdId?: 
       paid_by: expense.paidBy,
       is_shared: expense.isShared,
       logo_url: expense.logoUrl,
+      description: expense.description || null,
       expense_date: d.toISOString(),
       user_id: userId,
       household_id: householdId,

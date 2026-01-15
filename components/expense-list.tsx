@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Expense, Category, UserRole } from "@/types"
-import { formatAmount } from "@/lib/expense-utils"
+import { formatAmount, getDisplayAmount } from "@/lib/expense-utils"
 import { getClearbitLogoUrl, getGoogleFaviconUrl } from "@/lib/logo-utils"
 import { Users, X } from "lucide-react"
 import Image from "next/image"
@@ -57,7 +57,15 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
   )
 }
 
-export function ExpenseList({ expenses, categories, currentUser, onDelete }: any) {
+interface ExpenseListProps {
+  expenses: Expense[]
+  categories: Category[]
+  currentUser: UserRole
+  onDelete?: (id: string) => void
+  activeFilter?: "user1" | "shared" | "user2" | null
+}
+
+export function ExpenseList({ expenses, categories, currentUser, onDelete, activeFilter }: ExpenseListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -124,16 +132,26 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
                   <span>{categories.find((c: Category) => c.id === expense.categoryId)?.name}</span>
                 </p>
               )}
+              {expense.description && (
+                <p className="text-xs text-muted-foreground/80 italic mt-1 truncate">
+                  {expense.description}
+                </p>
+              )}
             </div>
             
             <div className="text-right shrink-0 relative z-10 pr-12">
               <motion.p
-                key={expense.amount}
+                key={`${expense.amount}-${activeFilter}`}
                 initial={{ scale: 1.2, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-xl font-bold tracking-tight"
               >
-                {formatAmount(expense.amount)}
+                {activeFilter === "shared" 
+                  ? formatAmount(expense.amount) // Montant entier pour "Commun"
+                  : activeFilter && expense.isShared
+                    ? formatAmount(getDisplayAmount(expense, currentUser)) // Moitié pour user1/user2 si partagé
+                    : formatAmount(expense.amount) // Montant entier sinon
+                }
               </motion.p>
             </div>
             

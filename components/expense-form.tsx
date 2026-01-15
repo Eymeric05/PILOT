@@ -29,6 +29,7 @@ interface ExpenseFormProps {
     logoUrl: string | null
     expenseDate: Date
     isRecurring: boolean
+    description?: string | null
   }) => Promise<void>
   onCancel?: () => void
 }
@@ -52,6 +53,7 @@ export function ExpenseForm({
     return today.toISOString().split("T")[0]
   })
   const [isRecurring, setIsRecurring] = useState(false)
+  const [description, setDescription] = useState("")
 
   // Synchroniser le categoryId quand les catégories chargent depuis la BDD
   useEffect(() => {
@@ -94,6 +96,7 @@ export function ExpenseForm({
         logoUrl: finalLogoUrl,
         expenseDate: new Date(expenseDate),
         isRecurring,
+        description: description.trim() || null,
       })
 
       // Reset form seulement après succès
@@ -109,6 +112,7 @@ export function ExpenseForm({
       if (categories.length > 0) {
         setCategoryId(categories[0].id)
       }
+      setDescription("")
     } catch (error) {
       console.error("Error submitting form:", error)
       // Ne pas reset le formulaire en cas d'erreur
@@ -229,6 +233,16 @@ export function ExpenseForm({
           className="h-4 w-4 rounded border-border/50 accent-primary transition-colors"
         />
         <Label htmlFor="isRecurring" className="text-sm font-normal tracking-tight cursor-pointer">Répéter chaque mois (12 mois)</Label>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description" className="text-sm font-medium tracking-tight">Objet / Description (optionnel)</Label>
+        <Input
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Ex: Paiement en plusieurs fois, remboursement..."
+        />
       </div>
 
       <div className="flex gap-3 pt-2">
