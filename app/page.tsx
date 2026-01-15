@@ -22,7 +22,7 @@ import { supabase } from "@/lib/supabase"
 import { Expense, UserRole } from "@/types"
 import { Plus } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
-import { mockCategories } from "@/lib/mock-data"
+import { DarkModeToggle } from "@/components/dark-mode-toggle"
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -208,9 +208,12 @@ export default function Home() {
               </p>
             </div>
           </Link>
-          {user && (
-            <UserProfile />
-          )}
+          <div className="flex items-center gap-2">
+            <DarkModeToggle />
+            {user && (
+              <UserProfile />
+            )}
+          </div>
         </header>
 
         {/* Sélecteur de mois */}
