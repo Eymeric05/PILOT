@@ -140,8 +140,14 @@ export default function Home() {
   const filteredExpenses = useMemo(() => {
     if (!activeFilter) return monthlyExpenses
     if (activeFilter === "shared") return monthlyExpenses.filter(e => e.isShared)
-    if (activeFilter === "user1") return monthlyExpenses.filter(e => e.paidBy === currentUser)
-    if (activeFilter === "user2") return monthlyExpenses.filter(e => e.paidBy === "partner")
+    if (activeFilter === "user1") {
+      // Pour user1 : dépenses payées par lui OU dépenses partagées (car il doit payer la moitié)
+      return monthlyExpenses.filter(e => e.paidBy === currentUser || e.isShared)
+    }
+    if (activeFilter === "user2") {
+      // Pour user2 : dépenses payées par partner OU dépenses partagées (car il doit payer la moitié)
+      return monthlyExpenses.filter(e => e.paidBy === "partner" || e.isShared)
+    }
     return monthlyExpenses
   }, [monthlyExpenses, activeFilter, currentUser])
 
