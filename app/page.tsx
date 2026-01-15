@@ -88,84 +88,28 @@ export default function Home() {
   useEffect(() => {
     let isMounted = true
     const initApp = async () => {
-      try {
-        // Vérifier les variables d'environnement
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        
-        if (!supabaseUrl || !supabaseKey) {
-          setLoading(false)
-          return
-        }
-
-        const { data: { user }, error } = await supabase.auth.getUser()
-        
-        if (error) {
-          // Ne pas rediriger si c'est une erreur réseau pour éviter la boucle
-          if (error.message.includes('ERR_CONNECTION_RESET') || error.message.includes('Failed to fetch')) {
-            setLoading(false)
-            return
-          }
-          
-          // Rediriger seulement si c'est vraiment une erreur d'authentification
-          if (error.status === 401 || error.message.includes('JWT')) {
-            router.push("/login")
-          }
-          setLoading(false)
-          return
-        }
-
-        if (!user) {
-          router.push("/login")
-          return
-        }
-
-        if (isMounted) {
-          setUser(user)
-          const hId = user.user_metadata?.household_id || null
-          setHouseholdId(hId)
-          await Promise.all([loadExpenses(user.id, hId), loadCategories()])
-          setLoading(false)
-        }
-      } catch (error: any) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push("/login")
+        return
+      }
+      if (isMounted) {
+        setUser(user)
+        const hId = user.user_metadata?.household_id || null
+        setHouseholdId(hId)
+        await Promise.all([loadExpenses(user.id, hId), loadCategories()])
         setLoading(false)
-        // Ne pas rediriger en cas d'exception pour éviter la boucle
       }
     }
     initApp()
 
     // Écouter les changements d'authentification pour mettre à jour l'utilisateur
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (isMounted) {
-        if (event === 'SIGNED_OUT' || !session?.user) {
-          setUser(null)
-          setLoading(false)
-          
-          // Nettoyer le stockage
-          if (typeof window !== 'undefined') {
-            localStorage.clear()
-            sessionStorage.clear()
-          }
-          
-          router.push("/login")
-          return
-        }
-        
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-          if (session?.user) {
-            try {
-              // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
-              const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
-              if (error) {
-                return
-              }
-              if (updatedUser && isMounted) {
-                setUser(updatedUser)
-              }
-            } catch (error: any) {
-              // Erreur silencieuse
-            }
-          }
+      if (session?.user && isMounted) {
+        // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
+        const { data: { user: updatedUser } } = await supabase.auth.getUser()
+        if (updatedUser && isMounted) {
+          setUser(updatedUser)
         }
       }
     })
@@ -173,16 +117,9 @@ export default function Home() {
     // Écouter les mises à jour des métadonnées utilisateur
     const handleUserMetadataUpdate = async () => {
       if (isMounted) {
-        try {
-          const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
-          if (error) {
-            return
-          }
-          if (updatedUser && isMounted) {
-            setUser(updatedUser)
-          }
-        } catch (error: any) {
-          // Erreur silencieuse
+        const { data: { user: updatedUser } } = await supabase.auth.getUser()
+        if (updatedUser && isMounted) {
+          setUser(updatedUser)
         }
       }
     }
@@ -359,7 +296,6 @@ export default function Home() {
             expenses={sortedExpenses}
             categories={categories}
             currentUser={currentUser}
-            activeFilter={activeFilter}
             onDelete={async (id: string) => {
               await deleteExpense(id)
               setExpenses(prev => prev.filter(e => e.id !== id))

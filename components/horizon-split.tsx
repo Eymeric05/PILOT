@@ -63,19 +63,8 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   const sharedTotal = calculateZoneTotal(expenses, "shared", currentUser)
   const user2Total = calculateZoneTotal(expenses, "user2", currentUser)
 
-  // Récupérer les noms depuis user_metadata, avec fallback intelligent
-  const emailPart = user?.email?.split("@")[0]
-  const formattedEmail = emailPart 
-    ? emailPart.charAt(0).toUpperCase() + emailPart.slice(1)
-    : null
-  const user1Name = user?.user_metadata?.display_name 
-    || formattedEmail
-    || "Personnel A"
-  
-  // Pour user2, utiliser le nom personnalisé ou garder "Personnel B" si non défini
+  const user1Name = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Personnel A"
   const user2Name = user?.user_metadata?.partner_name || "Personnel B"
-  
-  // Récupérer les photos depuis user_metadata
   const user1Picture = user?.user_metadata?.profile_picture_url || null
   const user2Picture = user?.user_metadata?.partner_profile_picture_url || null
 
@@ -164,25 +153,14 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
             {card.picture ? (
               <div className="relative mb-3">
                 <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border/50 mx-auto">
-                  {card.picture.startsWith('data:image') ? (
-                    // Image base64 - utiliser img pour base64
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={card.picture}
-                      alt={card.label}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    // URL externe
-                    <Image
-                      src={card.picture}
-                      alt={card.label}
-                      width={48}
-                      height={48}
-                      className="object-cover"
-                      unoptimized
-                    />
-                  )}
+                  <Image
+                    src={card.picture}
+                    alt={card.label}
+                    width={48}
+                    height={48}
+                    className="object-cover"
+                    unoptimized
+                  />
                 </div>
               </div>
             ) : card.filter === "shared" ? (

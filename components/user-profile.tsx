@@ -77,31 +77,18 @@ export function UserProfile({ children }: UserProfileProps) {
   const handleSignOut = async () => {
     try {
       setDrawerOpen(false)
+      // Attendre un peu pour que le drawer se ferme
+      await new Promise(resolve => setTimeout(resolve, 100))
       
-      // Signaler la déconnexion avant de fermer le drawer
       const { error } = await supabase.auth.signOut()
-      
-      if (error) {
-        console.error("Error signing out:", error)
-        // Même en cas d'erreur, forcer la déconnexion locale et la redirection
-      }
-      
-      // Nettoyer le stockage local
-      if (typeof window !== 'undefined') {
-        localStorage.clear()
-        sessionStorage.clear()
-      }
+      if (error) throw error
       
       // Forcer la redirection après déconnexion
       window.location.href = "/login"
     } catch (error) {
       console.error("Error signing out:", error)
       // Forcer la redirection même en cas d'erreur
-      if (typeof window !== 'undefined') {
-        localStorage.clear()
-        sessionStorage.clear()
-        window.location.href = "/login"
-      }
+      window.location.href = "/login"
     }
   }
 

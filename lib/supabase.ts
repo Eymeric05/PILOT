@@ -24,14 +24,7 @@ function getSupabaseClient(): SupabaseClient {
     throw new Error('Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  })
-  
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
   return supabaseClient
 }
 
