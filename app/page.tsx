@@ -184,7 +184,9 @@ export default function Home() {
   }, [filteredExpenses])
 
   const handleAddExpense = async (expenseData: any) => {
-    if (!user) return
+    if (!user) {
+      throw new Error("Utilisateur non connecté")
+    }
     try {
       await createExpense(
         expenseData,
@@ -196,6 +198,8 @@ export default function Home() {
       setDrawerOpen(false)
     } catch (error: any) {
       console.error("Error adding expense:", error)
+      alert(`Erreur lors de l'ajout de la dépense: ${error.message || "Une erreur est survenue"}`)
+      throw error // Re-lancer l'erreur pour que le formulaire ne se reset pas
     }
   }
 
