@@ -19,7 +19,7 @@ import { UserProfile } from "@/components/user-profile"
 import { filterExpensesByMonth, calculateMonthlyTotal, formatAmount } from "@/lib/expense-utils"
 import { fetchExpenses, createExpense, deleteExpense, fetchCategories } from "@/lib/expense-db"
 import { supabase } from "@/lib/supabase"
-import { Expense, UserRole } from "@/types"
+import { Expense, UserRole, Category } from "@/types"
 import { Plus } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
@@ -27,14 +27,15 @@ import { DarkModeToggle } from "@/components/dark-mode-toggle"
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterZone>(null)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [householdId, setHouseholdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Déterminer le currentUser basé sur les métadonnées de l'utilisateur
-  const currentUser: UserRole = user?.user_metadata?.role || "user1"
+  // Déterminer le currentUser basé sur l'ID de l'utilisateur
+  const currentUser: UserRole = user?.id || ""
 
   const loadExpenses = async (userId: string, householdId: string | null) => {
     try {
@@ -42,6 +43,98 @@ export default function Home() {
       setExpenses(userExpenses)
     } catch (error) {
       console.error("Error loading expenses:", error)
+    }
+  }
+
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name", { ascending: true })
+
+      if (error) {
+        console.error("Error fetching categories:", error)
+        // Si la table est vide, créer les catégories par défaut
+        const defaultCategories = [
+          { name: "Alimentation", icon: "🛒" },
+          { name: "Logement", icon: "🏠" },
+          { name: "Transport", icon: "🚗" },
+          { name: "Loisirs", icon: "🎉" },
+        ]
+
+        const { data: insertedData, error: insertError } = await supabase
+          .from("categories")
+          .insert(defaultCategories)
+          .select()
+
+        if (insertError) {
+          console.error("Error creating default categories:", insertError)
+          // Retourner les catégories par défaut en mémoire
+          setCategories(
+            defaultCategories.map((cat, index) => ({
+              id: `default-${index}`,
+              name: cat.name,
+              icon: cat.icon,
+              createdAt: new Date(),
+            }))
+          )
+        } else {
+          setCategories(
+            (insertedData || []).map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              icon: cat.icon,
+              createdAt: new Date(cat.created_at),
+            }))
+          )
+        }
+      } else if (!data || data.length === 0) {
+        // Table vide, créer les catégories par défaut
+        const defaultCategories = [
+          { name: "Alimentation", icon: "🛒" },
+          { name: "Logement", icon: "🏠" },
+          { name: "Transport", icon: "🚗" },
+          { name: "Loisirs", icon: "🎉" },
+        ]
+
+        const { data: insertedData, error: insertError } = await supabase
+          .from("categories")
+          .insert(defaultCategories)
+          .select()
+
+        if (insertError) {
+          console.error("Error creating default categories:", insertError)
+          setCategories(
+            defaultCategories.map((cat, index) => ({
+              id: `default-${index}`,
+              name: cat.name,
+              icon: cat.icon,
+              createdAt: new Date(),
+            }))
+          )
+        } else {
+          setCategories(
+            (insertedData || []).map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              icon: cat.icon,
+              createdAt: new Date(cat.created_at),
+            }))
+          )
+        }
+      } else {
+        setCategories(
+          data.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            icon: cat.icon,
+            createdAt: new Date(cat.created_at),
+          }))
+        )
+      }
+    } catch (error) {
+      console.error("Error loading categories:", error)
     }
   }
 
@@ -57,6 +150,7 @@ export default function Home() {
           const householdId = user.user_metadata?.household_id || null
           setHouseholdId(householdId)
           await loadExpenses(user.id, householdId)
+          await loadCategories()
         } else {
           window.location.href = "/login"
           return
@@ -82,6 +176,7 @@ export default function Home() {
         const householdId = currentUser.user_metadata?.household_id || null
         setHouseholdId(householdId)
         await loadExpenses(currentUser.id, householdId)
+        await loadCategories()
       } else {
         setExpenses([])
         window.location.href = "/login"
@@ -109,9 +204,9 @@ export default function Home() {
     if (activeFilter === "shared") {
       return monthlyExpenses.filter((expense) => expense.isShared)
     } else if (activeFilter === "user1") {
-      return monthlyExpenses.filter((expense) => expense.paidBy === "user1")
+      return monthlyExpenses.filter((expense) => expense.paidBy === currentUser)
     } else if (activeFilter === "user2") {
-      return monthlyExpenses.filter((expense) => expense.paidBy === "user2")
+      return monthlyExpenses.filter((expense) => expense.paidBy === "partner")
     }
 
     return monthlyExpenses
@@ -136,14 +231,17 @@ export default function Home() {
     paidBy: UserRole
     isShared: boolean
     logoUrl: string | null
+    expenseDate: Date
+    isRecurring: boolean
   }) => {
     if (!user) {
       console.error("User not authenticated")
+      alert("Vous n'êtes pas authentifié.")
       return
     }
 
     try {
-      const newExpense = await createExpense(
+      const newExpenses = await createExpense(
         {
           name: expenseData.name,
           amount: expenseData.amount,
@@ -152,16 +250,19 @@ export default function Home() {
           isShared: expenseData.isShared,
           logoUrl: expenseData.logoUrl,
           description: null,
-          expenseDate: new Date(currentDate),
+          expenseDate: expenseData.expenseDate,
         },
         user.id,
-        householdId
+        householdId,
+        expenseData.isRecurring
       )
 
-      setExpenses((prev) => [newExpense, ...prev])
+      setExpenses((prev) => [...newExpenses, ...prev])
       setDrawerOpen(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding expense:", error)
+      const errorMessage = error?.message || error?.details || JSON.stringify(error, null, 2)
+      alert(`Erreur SQL lors de l'ajout de la dépense:\n${errorMessage}`)
     }
   }
 
@@ -236,7 +337,7 @@ export default function Home() {
           ) : (
             <ExpenseList
               expenses={sortedExpenses}
-              categories={mockCategories}
+              categories={categories}
               currentUser={currentUser}
               onDelete={handleDeleteExpense}
             />
@@ -260,8 +361,9 @@ export default function Home() {
             </DrawerHeader>
             <div className="px-4 pb-8">
               <ExpenseForm
-                categories={mockCategories}
+                categories={categories}
                 currentUser={currentUser}
+                userId={user?.id || ""}
                 onSubmit={handleAddExpense}
                 onCancel={() => setDrawerOpen(false)}
               />

@@ -1,4 +1,4 @@
-export type UserRole = "user1" | "user2";
+export type UserRole = string;
 
 export interface Expense {
   id: string;

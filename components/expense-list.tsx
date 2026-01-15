@@ -1,6 +1,6 @@
 "use client"
 
-import { Expense, Category } from "@/types"
+import { Expense, Category, UserRole } from "@/types"
 import { formatAmount, getDisplayAmount } from "@/lib/expense-utils"
 import { getClearbitLogoUrl, getGoogleFaviconUrl } from "@/lib/logo-utils"
 import { Users, X } from "lucide-react"
@@ -9,7 +9,7 @@ import { useState } from "react"
 interface ExpenseListProps {
   expenses: Expense[]
   categories: Category[]
-  currentUser: "user1" | "user2"
+  currentUser: UserRole
   onDelete?: (expenseId: string) => void
 }
 

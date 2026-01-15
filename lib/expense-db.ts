@@ -43,11 +43,33 @@ export async function fetchExpenses(userId: string, householdId?: string | null)
 export async function createExpense(
   expense: Omit<Expense, "id" | "createdAt" | "updatedAt">,
   userId: string,
-  householdId?: string | null
-) {
-  const { data, error } = await supabase
-    .from("expenses")
-    .insert({
+  householdId?: string | null,
+  isRecurring: boolean = false
+): Promise<Expense[]> {
+  const expensesToInsert: any[] = []
+
+  if (isRecurring) {
+    // Créer 12 dépenses (une par mois)
+    for (let i = 0; i < 12; i++) {
+      const expenseDate = new Date(expense.expenseDate)
+      expenseDate.setMonth(expenseDate.getMonth() + i)
+
+      expensesToInsert.push({
+        name: expense.name,
+        amount: expense.amount,
+        category_id: expense.categoryId,
+        paid_by: expense.paidBy,
+        is_shared: expense.isShared,
+        logo_url: expense.logoUrl,
+        description: expense.description,
+        expense_date: expenseDate.toISOString(),
+        user_id: userId,
+        household_id: householdId,
+      })
+    }
+  } else {
+    // Créer une seule dépense
+    expensesToInsert.push({
       name: expense.name,
       amount: expense.amount,
       category_id: expense.categoryId,
@@ -59,32 +81,37 @@ export async function createExpense(
       user_id: userId,
       household_id: householdId,
     })
+  }
+
+  const { data, error } = await supabase
+    .from("expenses")
+    .insert(expensesToInsert)
     .select()
-    .single()
 
   if (error) {
     console.error("Error creating expense:", error)
     console.log("Error details:", JSON.stringify(error, null, 2))
-    alert(`Erreur lors de l'ajout de la dépense: ${error.message}`)
+    const errorMessage = error.message || error.details || JSON.stringify(error, null, 2)
+    alert(`Erreur SQL lors de l'ajout de la dépense:\n${errorMessage}\n\nCode: ${error.code}\nDétails: ${error.details || "Aucun détail"}`)
     throw error
   }
 
   // Convertir les données de la base vers le format Expense
-  return {
-    id: data.id,
-    name: data.name,
-    amount: data.amount,
-    categoryId: data.category_id,
-    paidBy: data.paid_by,
-    isShared: data.is_shared,
-    logoUrl: data.logo_url,
-    description: data.description,
-    expenseDate: new Date(data.expense_date),
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-    user_id: data.user_id,
-    household_id: data.household_id,
-  } as Expense
+  return (data || []).map((exp: any) => ({
+    id: exp.id,
+    name: exp.name,
+    amount: exp.amount,
+    categoryId: exp.category_id,
+    paidBy: exp.paid_by,
+    isShared: exp.is_shared,
+    logoUrl: exp.logo_url,
+    description: exp.description,
+    expenseDate: new Date(exp.expense_date),
+    createdAt: new Date(exp.created_at),
+    updatedAt: new Date(exp.updated_at),
+    user_id: exp.user_id,
+    household_id: exp.household_id,
+  })) as Expense[]
 }
 
 export async function deleteExpense(expenseId: string) {
@@ -131,10 +158,10 @@ export async function fetchCategories(): Promise<Category[]> {
 
 async function createDefaultCategories(): Promise<Category[]> {
   const defaultCategories = [
+    { name: "Alimentation", icon: "🛒" },
     { name: "Logement", icon: "🏠" },
-    { name: "Alimentation", icon: "🍔" },
     { name: "Transport", icon: "🚗" },
-    { name: "Santé", icon: "💊" },
+    { name: "Loisirs", icon: "🎉" },
   ]
 
   try {

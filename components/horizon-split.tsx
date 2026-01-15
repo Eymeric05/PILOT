@@ -22,8 +22,8 @@ function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "use
       }
       return total
     } else if (zone === "user1") {
-      // Zone Personnel A : dépenses payées par user1 (non partagées) + moitié des dépenses partagées payées par user1
-      if (expense.paidBy === "user1") {
+      // Zone Personnel A : dépenses payées par l'utilisateur actuel (non partagées) + moitié des dépenses partagées payées par l'utilisateur
+      if (expense.paidBy === currentUser) {
         if (expense.isShared) {
           return total + parseFloat(expense.amount) / 2
         } else {
@@ -32,8 +32,8 @@ function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "use
       }
       return total
     } else if (zone === "user2") {
-      // Zone Personnel B : dépenses payées par user2 (non partagées) + moitié des dépenses partagées payées par user2
-      if (expense.paidBy === "user2") {
+      // Zone Personnel B : dépenses payées par le partenaire (non partagées) + moitié des dépenses partagées payées par le partenaire
+      if (expense.paidBy === "partner") {
         if (expense.isShared) {
           return total + parseFloat(expense.amount) / 2
         } else {

@@ -19,6 +19,7 @@ import Image from "next/image"
 interface ExpenseFormProps {
   categories: Category[]
   currentUser: UserRole
+  userId: string
   onSubmit: (expense: {
     name: string
     amount: string
@@ -26,6 +27,8 @@ interface ExpenseFormProps {
     paidBy: UserRole
     isShared: boolean
     logoUrl: string | null
+    expenseDate: Date
+    isRecurring: boolean
   }) => void
   onCancel?: () => void
 }
@@ -33,16 +36,22 @@ interface ExpenseFormProps {
 export function ExpenseForm({
   categories,
   currentUser,
+  userId,
   onSubmit,
   onCancel,
 }: ExpenseFormProps) {
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "")
-  const [paidBy, setPaidBy] = useState<UserRole>(currentUser)
+  const [paidBy, setPaidBy] = useState<UserRole>(userId)
   const [isShared, setIsShared] = useState(true)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [isLoadingLogo, setIsLoadingLogo] = useState(false)
+  const [expenseDate, setExpenseDate] = useState<string>(() => {
+    const today = new Date()
+    return today.toISOString().split("T")[0]
+  })
+  const [isRecurring, setIsRecurring] = useState(false)
 
   // Débounce pour récupérer le logo
   useEffect(() => {
@@ -91,15 +100,22 @@ export function ExpenseForm({
       paidBy,
       isShared,
       logoUrl: finalLogoUrl,
+      expenseDate: new Date(expenseDate),
+      isRecurring,
     })
 
     // Reset form
     setName("")
     setAmount("")
     setCategoryId(categories[0]?.id || "")
-    setPaidBy(currentUser)
+    setPaidBy(userId)
     setIsShared(true)
     setLogoUrl(null)
+    setExpenseDate(() => {
+      const today = new Date()
+      return today.toISOString().split("T")[0]
+    })
+    setIsRecurring(false)
   }
 
   return (
@@ -164,6 +180,18 @@ export function ExpenseForm({
         </Select>
       </div>
 
+      {/* Date */}
+      <div className="space-y-2">
+        <Label htmlFor="expenseDate">Date de la dépense</Label>
+        <Input
+          id="expenseDate"
+          type="date"
+          value={expenseDate}
+          onChange={(e) => setExpenseDate(e.target.value)}
+          required
+        />
+      </div>
+
       {/* Payé par */}
       <div className="space-y-2">
         <Label htmlFor="paidBy">Payé par</Label>
@@ -172,8 +200,8 @@ export function ExpenseForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="user1">User 1</SelectItem>
-            <SelectItem value="user2">User 2</SelectItem>
+            <SelectItem value={userId}>Moi</SelectItem>
+            <SelectItem value="partner">Partenaire</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -189,6 +217,20 @@ export function ExpenseForm({
         />
         <Label htmlFor="isShared" className="cursor-pointer font-normal">
           Partager la dépense (divisé par 2)
+        </Label>
+      </div>
+
+      {/* Récurrence */}
+      <div className="flex items-center gap-3 py-2">
+        <input
+          type="checkbox"
+          id="isRecurring"
+          checked={isRecurring}
+          onChange={(e) => setIsRecurring(e.target.checked)}
+          className="h-5 w-5 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+        />
+        <Label htmlFor="isRecurring" className="cursor-pointer font-normal">
+          Dépense récurrente (chaque mois pendant 12 mois)
         </Label>
       </div>
 
