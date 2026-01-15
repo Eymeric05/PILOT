@@ -29,7 +29,8 @@ interface ExpenseFormProps {
     logoUrl: string | null
     expenseDate: Date
     isRecurring: boolean
-  }) => void
+    description?: string | null
+  }) => Promise<void>
   onCancel?: () => void
 }
 
@@ -52,6 +53,7 @@ export function ExpenseForm({
     return today.toISOString().split("T")[0]
   })
   const [isRecurring, setIsRecurring] = useState(false)
+  const [description, setDescription] = useState("")
 
   // Synchroniser le categoryId quand les catégories chargent depuis la BDD
   useEffect(() => {
@@ -77,30 +79,44 @@ export function ExpenseForm({
     return () => clearTimeout(timer)
   }, [name])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !amount || !categoryId) return
 
     // Utilisation finale de l'URL Logo.dev pour la BDD
     const finalLogoUrl = getLogoDevUrl(name.trim())
 
-    onSubmit({
-      name: name.trim(),
-      amount,
-      categoryId,
-      paidBy: paidBy || userId,
-      isShared,
-      logoUrl: finalLogoUrl,
-      expenseDate: new Date(expenseDate),
-      isRecurring,
-    })
+    try {
+      await onSubmit({
+        name: name.trim(),
+        amount,
+        categoryId,
+        paidBy: paidBy || userId,
+        isShared,
+        logoUrl: finalLogoUrl,
+        expenseDate: new Date(expenseDate),
+        isRecurring,
+        description: description.trim() || null,
+      })
 
-    // Reset form
-    setName("")
-    setAmount("")
-    setIsShared(true)
-    setLogoUrl(null)
-    setIsRecurring(false)
+      // Reset form seulement après succès
+      setName("")
+      setAmount("")
+      setIsShared(true)
+      setLogoUrl(null)
+      setIsRecurring(false)
+      setExpenseDate(() => {
+        const today = new Date()
+        return today.toISOString().split("T")[0]
+      })
+      if (categories.length > 0) {
+        setCategoryId(categories[0].id)
+      }
+      setDescription("")
+    } catch (error) {
+      console.error("Error submitting form:", error)
+      // Ne pas reset le formulaire en cas d'erreur
+    }
   }
 
   return (
@@ -217,6 +233,16 @@ export function ExpenseForm({
           className="h-4 w-4 rounded border-border/50 accent-primary transition-colors"
         />
         <Label htmlFor="isRecurring" className="text-sm font-normal tracking-tight cursor-pointer">Répéter chaque mois (12 mois)</Label>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description" className="text-sm font-medium tracking-tight">Objet / Description (optionnel)</Label>
+        <Input
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Ex: Paiement en plusieurs fois, remboursement..."
+        />
       </div>
 
       <div className="flex gap-3 pt-2">
