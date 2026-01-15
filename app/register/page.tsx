@@ -6,15 +6,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
-import { LogIn, Mail } from "lucide-react"
+import { UserPlus, Mail } from "lucide-react"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import Link from "next/link"
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function LoginPage() {
     return () => subscription.unsubscribe()
   }, [router])
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignUp = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -49,26 +51,49 @@ export default function LoginPage() {
       })
       if (error) throw error
     } catch (error: any) {
-      setError(error.message || "Erreur lors de la connexion avec Google")
+      setError(error.message || "Erreur lors de l'inscription avec Google")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setMessage(null)
+
+    // Validation
+    if (password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas")
+      setLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères")
+      setLoading(false)
+      return
+    }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
 
       if (error) throw error
 
-      router.push("/")
+      if (data.user && !data.session) {
+        // Email de confirmation envoyé
+        setMessage("Un email de confirmation a été envoyé. Vérifiez votre boîte mail.")
+      } else if (data.session) {
+        // Connexion automatique après inscription
+        router.push("/")
+      }
     } catch (error: any) {
       setError(error.message || "Une erreur est survenue")
     } finally {
@@ -104,15 +129,15 @@ export default function LoginPage() {
         <div className="rounded-3xl bg-card shadow-sm p-8 space-y-6">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2 text-foreground tracking-tight">
-              Connexion
+              Créer un compte
             </h2>
             <p className="text-sm text-muted-foreground tracking-tight">
-              Connectez-vous pour accéder à votre budget
+              Créez votre compte pour commencer
             </p>
           </div>
 
           {/* Formulaire email/mot de passe */}
-          <form onSubmit={handleEmailLogin} className="space-y-4" noValidate>
+          <form onSubmit={handleEmailSignUp} className="space-y-4" noValidate>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -138,10 +163,29 @@ export default function LoginPage() {
                 minLength={6}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={loading}
+                minLength={6}
+              />
+            </div>
 
             {error && (
               <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
                 {error}
+              </div>
+            )}
+
+            {message && (
+              <div className="text-sm text-secondary-foreground bg-secondary/50 rounded-lg p-3 shadow-sm">
+                {message}
               </div>
             )}
 
@@ -150,8 +194,8 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full gap-2"
             >
-              <LogIn className="h-4 w-4" />
-              {loading ? "Connexion..." : "Se connecter"}
+              <UserPlus className="h-4 w-4" />
+              {loading ? "Création..." : "Créer un compte"}
             </Button>
           </form>
 
@@ -166,7 +210,7 @@ export default function LoginPage() {
 
           {/* Bouton Google */}
           <Button
-            onClick={handleGoogleLogin}
+            onClick={handleGoogleSignUp}
             disabled={loading}
             variant="outline"
             className="w-full gap-2"
@@ -189,16 +233,16 @@ export default function LoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            {loading ? "Connexion..." : "Continuer avec Google"}
+            {loading ? "Inscription..." : "Continuer avec Google"}
           </Button>
 
-          {/* Lien vers inscription */}
+          {/* Lien vers connexion */}
           <div className="text-center text-sm pt-2">
             <Link
-              href="/register"
+              href="/login"
               className="text-muted-foreground hover:text-foreground transition-colors duration-200 underline underline-offset-2"
             >
-              Pas encore de compte ? S'inscrire
+              Déjà un compte ? Se connecter
             </Link>
           </div>
         </div>

@@ -55,22 +55,27 @@ export function UserProfile({ children }: UserProfileProps) {
       if (session?.user) {
         setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
       }
-      if (!session?.user) {
-        router.push("/login")
-      }
+      // Ne pas rediriger automatiquement ici pour éviter les conflits avec la déconnexion
     })
 
     return () => subscription.unsubscribe()
-  }, [router])
+  }, [])
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut()
       setDrawerOpen(false)
-      router.push("/login")
+      // Attendre un peu pour que le drawer se ferme
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      // Forcer la redirection après déconnexion
+      window.location.href = "/login"
     } catch (error) {
       console.error("Error signing out:", error)
-      router.push("/login")
+      // Forcer la redirection même en cas d'erreur
+      window.location.href = "/login"
     }
   }
 

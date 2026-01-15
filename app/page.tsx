@@ -158,7 +158,7 @@ export default function Home() {
     // Écouter les changements d'authentification
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
       
       const currentUser = session?.user ?? null
@@ -177,7 +177,11 @@ export default function Home() {
         }
       } else {
         setExpenses([])
-        router.push("/login")
+        // Ne rediriger que si ce n'est pas une déconnexion explicite
+        // La déconnexion gère sa propre redirection
+        if (event !== 'SIGNED_OUT') {
+          router.push("/login")
+        }
       }
     })
 
