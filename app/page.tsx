@@ -179,11 +179,14 @@ export default function Home() {
         </div>
 
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerTrigger asChild>
-            <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg">
-              <Plus className="h-12 w-12" />
-            </Button>
-          </DrawerTrigger>
+        <DrawerTrigger asChild>
+  <Button 
+    className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg p-0 flex items-center justify-center"
+    aria-label="Ajouter une dépense"
+  >
+    <Plus className="h-10 w-10" strokeWidth={3} />
+  </Button>
+</DrawerTrigger>
           <DrawerContent>
             <DrawerHeader className="text-left pb-2">
               <DrawerTitle>Nouvelle dépense</DrawerTitle>
