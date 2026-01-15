@@ -18,6 +18,7 @@ import { MonthSelector } from "@/components/month-selector"
 import { HorizonSplit, FilterZone } from "@/components/horizon-split"
 import { UserProfile } from "@/components/user-profile"
 import { filterExpensesByMonth, calculateMonthlyTotal } from "@/lib/expense-utils"
+// FIX : Utilisation des noms exacts exportés par lib/expense-db.ts
 import { fetchExpenses, createExpense, deleteExpense } from "@/lib/expense-db"
 import { supabase } from "@/lib/supabase"
 import { Expense, UserRole, Category } from "@/types"
@@ -37,18 +38,15 @@ export default function Home() {
   const [householdId, setHouseholdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Utilisation de l'ID réel pour l'identité
+  // FIX : user est possiblement null, on sécurise pour le build
   const currentUser: UserRole = user?.id || ""
 
-  // CHARGEMENT DES CATÉGORIES DEPUIS LA BDD (Supprime l'erreur mockCategories)
   const loadCategories = async () => {
     try {
       const { data, error } = await supabase.from("categories").select("*")
-      
       if (error) throw error
 
       if (!data || data.length === 0) {
-        // Insertion automatique si la table est vide (Auto-seed)
         const defaultCategories = [
           { name: "Alimentation", icon: "🛒" },
           { name: "Logement", icon: "🏠" },
@@ -56,7 +54,14 @@ export default function Home() {
           { name: "Loisirs", icon: "🎉" },
         ]
         const { data: inserted } = await supabase.from("categories").insert(defaultCategories).select()
-        if (inserted) setCategories(inserted.map(c => ({ ...c, createdAt: new Date(c.created_at) })))
+        if (inserted) {
+          setCategories(inserted.map(c => ({ 
+            id: c.id, 
+            name: c.name, 
+            icon: c.icon, 
+            createdAt: new Date(c.created_at) 
+          })))
+        }
       } else {
         setCategories(data.map(c => ({
           id: c.id,
@@ -99,7 +104,6 @@ export default function Home() {
     return () => { isMounted = false }
   }, [router])
 
-  // LOGIQUE DE FILTRAGE
   const monthlyExpenses = useMemo(() => {
     return filterExpensesByMonth(expenses, currentDate.getFullYear(), currentDate.getMonth())
   }, [expenses, currentDate])
@@ -116,21 +120,19 @@ export default function Home() {
     return [...filteredExpenses].sort((a, b) => new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime())
   }, [filteredExpenses])
 
-  // AJOUT AVEC RÉCURRENCE ET LOGO.DEV
   const handleAddExpense = async (expenseData: any) => {
     if (!user) return
     try {
-      const newExpenses = await createExpense(
-        { ...expenseData, description: null },
+      await createExpense(
+        expenseData,
         user.id,
         householdId,
         expenseData.isRecurring
       )
-      // On recharge tout pour être sûr de voir les récurrences futures si nécessaire
       await loadExpenses(user.id, householdId)
       setDrawerOpen(false)
     } catch (error: any) {
-      alert(`Erreur SQL : ${error.message || JSON.stringify(error)}`)
+      console.error("Error adding expense:", error)
     }
   }
 
@@ -144,9 +146,9 @@ export default function Home() {
             <Image src="/PILOT_logo.webp" alt="Logo" width={40} height={40} />
             <div>
               <h1 className="text-xl font-bold">
-                {user?.user_metadata?.display_name || user?.email?.split("@")[0]}
+                {user?.user_metadata?.display_name || user?.email?.split("@")[0] || "PILOT"}
               </h1>
-              <p className="text-xs text-muted-foreground">Budget PILOT</p>
+              <p className="text-xs text-muted-foreground">Budget mensuel partagé</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -169,7 +171,7 @@ export default function Home() {
             expenses={sortedExpenses}
             categories={categories}
             currentUser={currentUser}
-            onDelete={async (id) => {
+            onDelete={async (id: string) => {
                 await deleteExpense(id);
                 setExpenses(prev => prev.filter(e => e.id !== id));
             }}
@@ -183,11 +185,15 @@ export default function Home() {
             </Button>
           </DrawerTrigger>
           <DrawerContent>
-            <div className="p-4">
+            <DrawerHeader className="text-left">
+              <DrawerTitle>Nouvelle dépense</DrawerTitle>
+              <DrawerDescription>Ajoutez une dépense à votre budget</DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-8">
               <ExpenseForm
                 categories={categories}
                 currentUser={currentUser}
-                userId={user.id}
+                userId={user?.id || ""} // FIX : Sécurité null pour le build
                 onSubmit={handleAddExpense}
                 onCancel={() => setDrawerOpen(false)}
               />
