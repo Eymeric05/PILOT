@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Expense, Category, UserRole } from "@/types"
 import { formatAmount } from "@/lib/expense-utils"
 import { getClearbitLogoUrl, getGoogleFaviconUrl } from "@/lib/logo-utils"
-import { Users, X, TrendingUp } from "lucide-react"
+import { Users, X } from "lucide-react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import gsap from "gsap"
@@ -126,15 +126,14 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
               )}
             </div>
             
-            <div className="text-right shrink-0 relative z-10">
+            <div className="text-right shrink-0 relative z-10 pr-12">
               <motion.p
                 key={expense.amount}
                 initial={{ scale: 1.2, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="text-xl font-bold tracking-tight flex items-center gap-2"
+                className="text-xl font-bold tracking-tight"
               >
                 {formatAmount(expense.amount)}
-                <TrendingUp className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.p>
             </div>
             
@@ -143,7 +142,7 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
                 onClick={() => onDelete(expense.id)}
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
-                className="absolute right-4 p-2 rounded-xl glass hover:bg-destructive/20 hover:text-destructive
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-xl glass hover:bg-destructive/20 hover:text-destructive
                            transition-all duration-300 opacity-0 group-hover:opacity-100 z-20"
                 aria-label="Supprimer"
               >

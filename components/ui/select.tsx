@@ -20,7 +20,7 @@ const SelectTrigger = React.forwardRef<
     className={cn(
       "flex h-12 w-full items-center justify-between rounded-xl border-2 border-border bg-background px-4 py-3 text-sm",
       "placeholder:text-muted-foreground",
-      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary",
+      "focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-1 focus:border-primary/50",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "[&>span]:line-clamp-1",
       "transition-all duration-300 ease-out",

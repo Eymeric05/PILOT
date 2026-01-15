@@ -168,6 +168,18 @@ export function ExpenseForm({
           type="date"
           value={expenseDate}
           onChange={(e) => setExpenseDate(e.target.value)}
+          onClick={(e) => {
+            const input = e.currentTarget
+            if (input.showPicker) {
+              try {
+                input.showPicker()
+              } catch (err) {
+                // Fallback si showPicker n'est pas supporté
+                input.focus()
+              }
+            }
+          }}
+          className="cursor-pointer"
           required
         />
       </div>

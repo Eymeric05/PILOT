@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
+import Image from "next/image"
+import { User } from "lucide-react"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 export type FilterZone = "user1" | "shared" | "user2" | null
 
@@ -14,6 +17,7 @@ interface HorizonSplitProps {
   currentUser: UserRole
   activeFilter: FilterZone
   onFilterChange: (filter: FilterZone) => void
+  user?: SupabaseUser | null
 }
 
 function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "user2", currentUser: UserRole): number {
@@ -46,15 +50,38 @@ function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "use
   }, 0)
 }
 
-export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChange }: HorizonSplitProps) {
+export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChange, user }: HorizonSplitProps) {
   const user1Total = calculateZoneTotal(expenses, "user1", currentUser)
   const sharedTotal = calculateZoneTotal(expenses, "shared", currentUser)
   const user2Total = calculateZoneTotal(expenses, "user2", currentUser)
 
+  const user1Name = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Personnel A"
+  const user2Name = user?.user_metadata?.partner_name || "Personnel B"
+  const user1Picture = user?.user_metadata?.profile_picture_url || null
+  const user2Picture = user?.user_metadata?.partner_profile_picture_url || null
+
   const cards = [
-    { label: "Personnel A", total: user1Total, filter: "user1" as FilterZone, color: "from-blue-500/20 to-cyan-500/20" },
-    { label: "Commun", total: sharedTotal, filter: "shared" as FilterZone, color: "from-purple-500/20 to-pink-500/20" },
-    { label: "Personnel B", total: user2Total, filter: "user2" as FilterZone, color: "from-orange-500/20 to-red-500/20" },
+    { 
+      label: user1Name, 
+      total: user1Total, 
+      filter: "user1" as FilterZone, 
+      color: "from-blue-500/20 to-cyan-500/20",
+      picture: user1Picture
+    },
+    { 
+      label: "Commun", 
+      total: sharedTotal, 
+      filter: "shared" as FilterZone, 
+      color: "from-purple-500/20 to-pink-500/20",
+      picture: null
+    },
+    { 
+      label: user2Name, 
+      total: user2Total, 
+      filter: "user2" as FilterZone, 
+      color: "from-orange-500/20 to-red-500/20",
+      picture: user2Picture
+    },
   ]
 
   const cardRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -113,6 +140,28 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             </div>
+
+            {/* Profile picture or icon */}
+            {card.picture ? (
+              <div className="relative mb-3">
+                <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border/50 mx-auto">
+                  <Image
+                    src={card.picture}
+                    alt={card.label}
+                    width={48}
+                    height={48}
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            ) : card.filter !== "shared" ? (
+              <div className="relative mb-3 flex justify-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 border-2 border-border/50 flex items-center justify-center">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+            ) : null}
 
             <span className="relative text-xs font-semibold text-muted-foreground mb-3 tracking-widest uppercase">
               {card.label}

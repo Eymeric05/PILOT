@@ -245,6 +245,7 @@ export default function Home() {
           currentUser={currentUser}
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
+          user={user}
         />
 
         <motion.div
