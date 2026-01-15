@@ -108,7 +108,7 @@ export function ExpenseForm({
       <div className="space-y-2">
         <Label htmlFor="name" className="text-sm font-medium tracking-tight">Nom de la dépense</Label>
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted overflow-hidden border border-subtle-30">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted overflow-hidden border-2 border-border/50">
             {logoUrl ? (
               <Image
                 src={logoUrl}

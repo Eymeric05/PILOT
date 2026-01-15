@@ -3,6 +3,9 @@
 import { Expense, UserRole } from "@/types"
 import { formatAmount } from "@/lib/expense-utils"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
+import { useEffect, useRef } from "react"
+import gsap from "gsap"
 
 export type FilterZone = "user1" | "shared" | "user2" | null
 
@@ -16,13 +19,11 @@ interface HorizonSplitProps {
 function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "user2", currentUser: UserRole): number {
   return expenses.reduce((total, expense) => {
     if (zone === "shared") {
-      // Zone Commun : seulement les dépenses partagées
       if (expense.isShared) {
         return total + parseFloat(expense.amount) / 2
       }
       return total
     } else if (zone === "user1") {
-      // Zone Personnel A : dépenses payées par l'utilisateur actuel (non partagées) + moitié des dépenses partagées payées par l'utilisateur
       if (expense.paidBy === currentUser) {
         if (expense.isShared) {
           return total + parseFloat(expense.amount) / 2
@@ -32,7 +33,6 @@ function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "use
       }
       return total
     } else if (zone === "user2") {
-      // Zone Personnel B : dépenses payées par le partenaire (non partagées) + moitié des dépenses partagées payées par le partenaire
       if (expense.paidBy === "partner") {
         if (expense.isShared) {
           return total + parseFloat(expense.amount) / 2
@@ -51,46 +51,94 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   const sharedTotal = calculateZoneTotal(expenses, "shared", currentUser)
   const user2Total = calculateZoneTotal(expenses, "user2", currentUser)
 
+  const cards = [
+    { label: "Personnel A", total: user1Total, filter: "user1" as FilterZone, color: "from-blue-500/20 to-cyan-500/20" },
+    { label: "Commun", total: sharedTotal, filter: "shared" as FilterZone, color: "from-purple-500/20 to-pink-500/20" },
+    { label: "Personnel B", total: user2Total, filter: "user2" as FilterZone, color: "from-orange-500/20 to-red-500/20" },
+  ]
+
+  const cardRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    cardRefs.current.forEach((ref, index) => {
+      if (ref) {
+        gsap.fromTo(
+          ref,
+          { opacity: 0, y: 30, scale: 0.9 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
+            delay: index * 0.15,
+            ease: "back.out(1.7)",
+          }
+        )
+      }
+    })
+  }, [])
+
   return (
-    <div className="grid grid-cols-3 gap-3 mb-6">
-      <button
-        type="button"
-        onClick={() => onFilterChange(activeFilter === "user1" ? null : "user1")}
-        className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border border-subtle transition-all duration-200 ease-out cursor-pointer shadow-none",
-          "hover:bg-card-hover hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "user1" && "border-accent-subtle bg-accent-subtle ring-1 ring-accent-subtle"
-        )}
-      >
-        <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel A</span>
-        <span className="text-lg font-semibold tracking-tight">{formatAmount(user1Total)}</span>
-      </button>
+    <div className="grid grid-cols-3 gap-4 mb-8">
+      {cards.map((card, index) => {
+        const isActive = activeFilter === card.filter
+        return (
+          <motion.button
+            key={card.filter}
+            ref={(el) => (cardRefs.current[index] = el)}
+            type="button"
+            onClick={() => onFilterChange(isActive ? null : card.filter)}
+            whileHover={{ 
+              y: -4,
+              scale: 1.02,
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{ scale: 0.98 }}
+            className={cn(
+              "relative flex flex-col items-center justify-center p-6 rounded-3xl",
+              "glass border-2 transition-all duration-500 ease-out cursor-pointer",
+              "overflow-hidden group",
+              isActive
+                ? "border-primary/60 shadow-2xl shadow-primary/20 scale-105"
+                : "border-border/30 hover:border-border/60 hover:shadow-xl"
+            )}
+          >
+            {/* Gradient background on hover */}
+            <div className={cn(
+              "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+              card.color
+            )} />
+            
+            {/* Shine effect */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            </div>
 
-      <button
-        type="button"
-        onClick={() => onFilterChange(activeFilter === "shared" ? null : "shared")}
-        className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border border-subtle transition-all duration-200 ease-out cursor-pointer shadow-none",
-          "hover:bg-card-hover hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "shared" && "border-accent-subtle bg-accent-subtle ring-1 ring-accent-subtle"
-        )}
-      >
-        <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Commun</span>
-        <span className="text-lg font-semibold tracking-tight">{formatAmount(sharedTotal)}</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onFilterChange(activeFilter === "user2" ? null : "user2")}
-        className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border border-subtle transition-all duration-200 ease-out cursor-pointer shadow-none",
-          "hover:bg-card-hover hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "user2" && "border-accent-subtle bg-accent-subtle ring-1 ring-accent-subtle"
-        )}
-      >
-        <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel B</span>
-        <span className="text-lg font-semibold tracking-tight">{formatAmount(user2Total)}</span>
-      </button>
+            <span className="relative text-xs font-semibold text-muted-foreground mb-3 tracking-widest uppercase">
+              {card.label}
+            </span>
+            <motion.span
+              key={card.total}
+              initial={{ scale: 1.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative text-2xl font-bold tracking-tight"
+            >
+              {formatAmount(card.total)}
+            </motion.span>
+            
+            {isActive && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute inset-0 rounded-3xl border-2 border-primary/40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+          </motion.button>
+        )
+      })}
     </div>
   )
 }

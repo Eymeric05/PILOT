@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import Link from "next/link"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,15 +16,16 @@ import { ExpenseForm } from "@/components/expense-form"
 import { MonthSelector } from "@/components/month-selector"
 import { HorizonSplit, FilterZone } from "@/components/horizon-split"
 import { UserProfile } from "@/components/user-profile"
-import { filterExpensesByMonth, calculateMonthlyTotal } from "@/lib/expense-utils"
-// FIX : Utilisation des noms exacts exportés par lib/expense-db.ts
+import { filterExpensesByMonth } from "@/lib/expense-utils"
 import { fetchExpenses, createExpense, deleteExpense } from "@/lib/expense-db"
 import { supabase } from "@/lib/supabase"
 import { Expense, UserRole, Category } from "@/types"
-import { Plus } from "lucide-react"
+import { Plus, Sparkles } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import Image from "next/image"
+import { motion } from "framer-motion"
+import gsap from "gsap"
 
 export default function Home() {
   const router = useRouter()
@@ -37,8 +37,9 @@ export default function Home() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [householdId, setHouseholdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const headerRef = useRef<HTMLElement>(null)
+  const fabRef = useRef<HTMLDivElement>(null)
 
-  // FIX : user est possiblement null, on sécurise pour le build
   const currentUser: UserRole = user?.id || ""
 
   const loadCategories = async () => {
@@ -55,11 +56,11 @@ export default function Home() {
         ]
         const { data: inserted } = await supabase.from("categories").insert(defaultCategories).select()
         if (inserted) {
-          setCategories(inserted.map(c => ({ 
-            id: c.id, 
-            name: c.name, 
-            icon: c.icon, 
-            createdAt: new Date(c.created_at) 
+          setCategories(inserted.map(c => ({
+            id: c.id,
+            name: c.name,
+            icon: c.icon,
+            createdAt: new Date(c.created_at)
           })))
         }
       } else {
@@ -104,6 +105,34 @@ export default function Home() {
     return () => { isMounted = false }
   }, [router])
 
+  useEffect(() => {
+    if (!loading) {
+      // Animate header
+      if (headerRef.current) {
+        gsap.fromTo(
+          headerRef.current,
+          { opacity: 0, y: -30 },
+          { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }
+        )
+      }
+
+      // Animate FAB with bounce
+      if (fabRef.current) {
+        gsap.fromTo(
+          fabRef.current,
+          { scale: 0, rotation: -180 },
+          { 
+            scale: 1, 
+            rotation: 0, 
+            duration: 0.6, 
+            delay: 0.5,
+            ease: "back.out(1.7)" 
+          }
+        )
+      }
+    }
+  }, [loading])
+
   const monthlyExpenses = useMemo(() => {
     return filterExpensesByMonth(expenses, currentDate.getFullYear(), currentDate.getMonth())
   }, [expenses, currentDate])
@@ -136,26 +165,78 @@ export default function Home() {
     }
   }
 
-  if (loading) return <div className="flex h-screen items-center justify-center">Chargement...</div>
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background gradient-mesh">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-muted-foreground font-medium">Chargement...</p>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-md px-4 py-6">
-        <header className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image src="/PILOT_logo.webp" alt="Logo" width={40} height={40} className="rounded-xl" />
+    <main className="min-h-screen bg-background gradient-mesh relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-md px-4 py-8 sm:px-6">
+        <motion.header
+          ref={headerRef}
+          className="mb-8 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: 10 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative"
+            >
+              <Image
+                src="/PILOT_logo.webp"
+                alt="Logo"
+                width={56}
+                height={56}
+                className="rounded-2xl shadow-2xl glass border-2 border-border/30"
+              />
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 1, 0.5]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute -top-1 -right-1"
+              >
+                <Sparkles className="h-5 w-5 text-primary" />
+              </motion.div>
+            </motion.div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">
+              <h1 className="text-2xl font-bold tracking-tight text-gradient">
                 {user?.user_metadata?.display_name || user?.email?.split("@")[0] || "PILOT"}
               </h1>
-              <p className="text-xs text-muted-foreground tracking-tight">Budget mensuel partagé</p>
+              <p className="text-sm text-muted-foreground tracking-wide font-medium">Budget mensuel partagé</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <DarkModeToggle />
             <UserProfile />
           </div>
-        </header>
+        </motion.header>
 
         <MonthSelector currentDate={currentDate} onDateChange={setCurrentDate} />
 
@@ -166,42 +247,74 @@ export default function Home() {
           onFilterChange={setActiveFilter}
         />
 
-        <div className="mt-6">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8"
+        >
           <ExpenseList
             expenses={sortedExpenses}
             categories={categories}
             currentUser={currentUser}
             onDelete={async (id: string) => {
-                await deleteExpense(id);
-                setExpenses(prev => prev.filter(e => e.id !== id));
+              await deleteExpense(id)
+              setExpenses(prev => prev.filter(e => e.id !== id))
             }}
           />
-        </div>
+        </motion.div>
 
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerTrigger asChild>
-  <Button 
-    className="fixed bottom-6 right-6 h-16 w-16 rounded-full p-0 flex items-center justify-center 
-               bg-primary text-primary-foreground
-               drop-shadow-xl shadow-2xl
-               hover:scale-105 active:scale-95
-               transition-all duration-200 ease-out
-               border border-subtle-20"
-    aria-label="Ajouter une dépense"
-  >
-    <Plus className="h-10 w-10" strokeWidth={2.5} />
-  </Button>
-</DrawerTrigger>
+          <DrawerTrigger asChild>
+            <motion.div
+              ref={fabRef}
+              className="fixed bottom-6 right-6 z-50"
+            >
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                className="relative"
+              >
+                <Button
+                  size="lg"
+                  className="h-20 w-20 rounded-full shadow-2xl hover:shadow-primary/30
+                             bg-gradient-to-br from-primary to-primary/80
+                             transition-all duration-300 relative overflow-hidden group"
+                  aria-label="Ajouter une dépense"
+                >
+                  <motion.div
+                    animate={{ rotate: drawerOpen ? 45 : 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="relative z-10"
+                  >
+                    <Plus className="h-8 w-8" strokeWidth={3} />
+                  </motion.div>
+                  {/* Ripple effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-white/20 rounded-full"
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{ 
+                      scale: drawerOpen ? [1, 2, 0] : 0,
+                      opacity: [1, 0.5, 0]
+                    }}
+                    transition={{ duration: 0.6 }}
+                  />
+                </Button>
+              </motion.div>
+            </motion.div>
+          </DrawerTrigger>
           <DrawerContent>
-            <DrawerHeader className="text-left pb-2">
-              <DrawerTitle>Nouvelle dépense</DrawerTitle>
-              <DrawerDescription>Ajoutez une dépense à votre budget</DrawerDescription>
+            <DrawerHeader className="text-left pb-4">
+              <DrawerTitle className="text-2xl font-bold">Nouvelle dépense</DrawerTitle>
+              <DrawerDescription className="text-base">
+                Ajoutez une dépense à votre budget
+              </DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-6 sm:pb-8">
+            <div className="px-4 pb-8">
               <ExpenseForm
                 categories={categories}
                 currentUser={currentUser}
-                userId={user?.id || ""} // FIX : Sécurité null pour le build
+                userId={user?.id || ""}
                 onSubmit={handleAddExpense}
                 onCancel={() => setDrawerOpen(false)}
               />

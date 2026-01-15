@@ -132,7 +132,7 @@ export function UserProfile({ children }: UserProfileProps) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-8 space-y-4">
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-subtle shadow-none">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border-2 border-border">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <User className="h-6 w-6 text-primary" />
             </div>
