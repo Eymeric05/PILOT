@@ -88,28 +88,66 @@ export default function Home() {
   useEffect(() => {
     let isMounted = true
     const initApp = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push("/login")
-        return
-      }
-      if (isMounted) {
-        setUser(user)
-        const hId = user.user_metadata?.household_id || null
-        setHouseholdId(hId)
-        await Promise.all([loadExpenses(user.id, hId), loadCategories()])
-        setLoading(false)
+      try {
+        // Vérifier d'abord la session (plus rapide que getUser)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError || !session?.user) {
+          // Pas de session valide, rediriger vers login
+          if (isMounted) {
+            setLoading(false)
+            router.replace("/login")
+          }
+          return
+        }
+
+        // Vérifier l'utilisateur avec getUser pour obtenir les métadonnées à jour
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (userError || !user) {
+          // Erreur ou pas d'utilisateur, rediriger vers login
+          if (isMounted) {
+            setLoading(false)
+            router.replace("/login")
+          }
+          return
+        }
+
+        // Utilisateur connecté, charger les données
+        if (isMounted) {
+          setUser(user)
+          const hId = user.user_metadata?.household_id || null
+          setHouseholdId(hId)
+          await Promise.all([loadExpenses(user.id, hId), loadCategories()])
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation:", error)
+        // En cas d'erreur, rediriger vers login
+        if (isMounted) {
+          setLoading(false)
+          router.replace("/login")
+        }
       }
     }
     initApp()
 
     // Écouter les changements d'authentification pour mettre à jour l'utilisateur
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user && isMounted) {
-        // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
+      if (!isMounted) return
+      
+      if (session?.user) {
+        // Utilisateur connecté : recharger l'utilisateur pour obtenir les métadonnées mises à jour
         const { data: { user: updatedUser } } = await supabase.auth.getUser()
         if (updatedUser && isMounted) {
           setUser(updatedUser)
+          const hId = updatedUser.user_metadata?.household_id || null
+          setHouseholdId(hId)
+        }
+      } else if (!session) {
+        // Pas de session : rediriger vers login
+        if (isMounted) {
+          router.replace("/login")
         }
       }
     })
