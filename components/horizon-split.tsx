@@ -63,10 +63,35 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   const sharedTotal = calculateZoneTotal(expenses, "shared", currentUser)
   const user2Total = calculateZoneTotal(expenses, "user2", currentUser)
 
-  const user1Name = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Personnel A"
+  // Récupérer les noms depuis user_metadata, avec fallback intelligent
+  const user1Name = user?.user_metadata?.display_name 
+    || user?.email?.split("@")[0]?.charAt(0).toUpperCase() + user?.email?.split("@")[0]?.slice(1)
+    || "Personnel A"
+  
+  // Pour user2, utiliser le nom personnalisé ou garder "Personnel B" si non défini
   const user2Name = user?.user_metadata?.partner_name || "Personnel B"
+  
+  // Récupérer les photos depuis user_metadata
   const user1Picture = user?.user_metadata?.profile_picture_url || null
   const user2Picture = user?.user_metadata?.partner_profile_picture_url || null
+
+  // Debug: vérifier les valeurs récupérées
+  useEffect(() => {
+    if (user) {
+      console.log('[HorizonSplit] Métadonnées utilisateur:', {
+        user1Name,
+        user2Name,
+        user1Picture: user1Picture ? `Present (${user1Picture.substring(0, 30)}...)` : 'Missing',
+        user2Picture: user2Picture ? `Present (${user2Picture.substring(0, 30)}...)` : 'Missing',
+        raw_metadata: {
+          display_name: user.user_metadata?.display_name,
+          partner_name: user.user_metadata?.partner_name,
+          profile_picture_url: user.user_metadata?.profile_picture_url ? 'Present' : 'Missing',
+          partner_profile_picture_url: user.user_metadata?.partner_profile_picture_url ? 'Present' : 'Missing',
+        }
+      })
+    }
+  }, [user, user1Name, user2Name, user1Picture, user2Picture])
 
   const cards = [
     { 
@@ -153,14 +178,24 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
             {card.picture ? (
               <div className="relative mb-3">
                 <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border/50 mx-auto">
-                  <Image
-                    src={card.picture}
-                    alt={card.label}
-                    width={48}
-                    height={48}
-                    className="object-cover"
-                    unoptimized
-                  />
+                  {card.picture.startsWith('data:image') ? (
+                    // Image base64
+                    <img
+                      src={card.picture}
+                      alt={card.label}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    // URL externe
+                    <Image
+                      src={card.picture}
+                      alt={card.label}
+                      width={48}
+                      height={48}
+                      className="object-cover"
+                      unoptimized
+                    />
+                  )}
                 </div>
               </div>
             ) : card.filter === "shared" ? (

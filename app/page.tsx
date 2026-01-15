@@ -143,6 +143,17 @@ export default function Home() {
           setUser(user)
           const hId = user.user_metadata?.household_id || null
           setHouseholdId(hId)
+          
+          // Debug: vérifier les métadonnées
+          console.log('[AUTH] Utilisateur connecté:', {
+            id: user.id,
+            email: user.email,
+            display_name: user.user_metadata?.display_name,
+            partner_name: user.user_metadata?.partner_name,
+            has_profile_picture: !!user.user_metadata?.profile_picture_url,
+            has_partner_picture: !!user.user_metadata?.partner_profile_picture_url,
+          })
+          
           await Promise.all([loadExpenses(user.id, hId), loadCategories()])
           setLoading(false)
         }
@@ -160,26 +171,43 @@ export default function Home() {
 
     // Écouter les changements d'authentification pour mettre à jour l'utilisateur
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AUTH] Auth state change:', event, session?.user?.email || 'No user')
+      
       if (isMounted) {
         if (event === 'SIGNED_OUT' || !session?.user) {
-          console.log('[AUTH] Déconnexion détectée - Redirection vers /login')
+          console.log('[AUTH] Déconnexion détectée - Nettoyage et redirection')
+          setUser(null)
+          setLoading(false)
+          
+          // Nettoyer le stockage
+          if (typeof window !== 'undefined') {
+            localStorage.clear()
+            sessionStorage.clear()
+          }
+          
           router.push("/login")
           return
         }
         
-        if (session?.user) {
-          try {
-            // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
-            const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
-            if (error) {
-              console.error('[AUTH ERROR] Erreur lors de la mise à jour de l\'utilisateur:', error.message)
-              return
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          if (session?.user) {
+            try {
+              // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
+              const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
+              if (error) {
+                console.error('[AUTH ERROR] Erreur lors de la mise à jour de l\'utilisateur:', error.message)
+                return
+              }
+              if (updatedUser && isMounted) {
+                console.log('[AUTH] Utilisateur mis à jour avec métadonnées:', {
+                  display_name: updatedUser.user_metadata?.display_name,
+                  partner_name: updatedUser.user_metadata?.partner_name,
+                })
+                setUser(updatedUser)
+              }
+            } catch (error: any) {
+              console.error('[AUTH ERROR] Exception lors de la mise à jour:', error?.message)
             }
-            if (updatedUser && isMounted) {
-              setUser(updatedUser)
-            }
-          } catch (error: any) {
-            console.error('[AUTH ERROR] Exception lors de la mise à jour:', error?.message)
           }
         }
       }
