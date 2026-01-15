@@ -40,19 +40,36 @@ export function UserProfile({ children }: UserProfileProps) {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        if (error) throw error
-        setUser(user)
-        setDisplayName(user?.user_metadata?.display_name || user?.email?.split("@")[0] || "")
-        setPartnerName(user?.user_metadata?.partner_name || "Personnel B")
-        setProfilePicture(user?.user_metadata?.profile_picture_url || null)
-        setPartnerProfilePicture(user?.user_metadata?.partner_profile_picture_url || null)
+        // Utiliser getSession() pour une vérification locale rapide
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          setUser(session.user)
+          setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
+          setPartnerName(session.user.user_metadata?.partner_name || "Personnel B")
+          setProfilePicture(session.user.user_metadata?.profile_picture_url || null)
+          setPartnerProfilePicture(session.user.user_metadata?.partner_profile_picture_url || null)
+        } else {
+          setUser(null)
+        }
       } catch (error) {
-        console.error("Error getting user:", error)
+        console.error("Error getting session:", error)
         setUser(null)
       } finally {
         setLoading(false)
       }
+
+      // Vérifier en arrière-plan pour les métadonnées mises à jour (sans bloquer)
+      supabase.auth.getUser().then(({ data: { user: validatedUser } }) => {
+        if (validatedUser) {
+          setUser(validatedUser)
+          setDisplayName(validatedUser.user_metadata?.display_name || validatedUser.email?.split("@")[0] || "")
+          setPartnerName(validatedUser.user_metadata?.partner_name || "Personnel B")
+          setProfilePicture(validatedUser.user_metadata?.profile_picture_url || null)
+          setPartnerProfilePicture(validatedUser.user_metadata?.partner_profile_picture_url || null)
+        }
+      }).catch(() => {
+        // Ignorer les erreurs réseau, on garde les données de la session locale
+      })
     }
 
     checkUser()

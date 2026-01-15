@@ -21,9 +21,9 @@ export default function RegisterPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+    // Vérifier si l'utilisateur est déjà connecté (vérification locale rapide)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
         router.push("/")
       }
     })
