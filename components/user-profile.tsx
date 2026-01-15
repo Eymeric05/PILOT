@@ -38,51 +38,29 @@ export function UserProfile({ children }: UserProfileProps) {
   const router = useRouter()
 
   useEffect(() => {
-    let isMounted = true
-
     const checkUser = async () => {
       try {
-        // Utiliser getSession() pour une vérification locale rapide (pas de requête réseau)
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!isMounted) return
-
-        if (session?.user) {
-          setUser(session.user)
-          setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
-          setPartnerName(session.user.user_metadata?.partner_name || "Personnel B")
-          setProfilePicture(session.user.user_metadata?.profile_picture_url || null)
-          setPartnerProfilePicture(session.user.user_metadata?.partner_profile_picture_url || null)
-        } else {
-          setUser(null)
-        }
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error) throw error
+        setUser(user)
+        setDisplayName(user?.user_metadata?.display_name || user?.email?.split("@")[0] || "")
+        setPartnerName(user?.user_metadata?.partner_name || "Personnel B")
+        setProfilePicture(user?.user_metadata?.profile_picture_url || null)
+        setPartnerProfilePicture(user?.user_metadata?.partner_profile_picture_url || null)
       } catch (error) {
-        // Ignorer les erreurs silencieusement
-        if (isMounted) {
-          setUser(null)
-        }
+        console.error("Error getting user:", error)
+        setUser(null)
       } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
+        setLoading(false)
       }
-
-      // NE PAS faire d'appel getUser() en arrière-plan - cela cause des erreurs réseau en boucle
-      // La session locale est suffisante
     }
 
     checkUser()
 
-    // Écouter UNIQUEMENT les changements d'authentification explicites
+    // Écouter les changements d'authentification
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isMounted) return
-
-      // Ignorer INITIAL_SESSION et TOKEN_REFRESHED pour éviter les mises à jour inutiles
-      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-        return
-      }
-
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
         setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
@@ -90,12 +68,10 @@ export function UserProfile({ children }: UserProfileProps) {
         setProfilePicture(session.user.user_metadata?.profile_picture_url || null)
         setPartnerProfilePicture(session.user.user_metadata?.partner_profile_picture_url || null)
       }
+      // Ne pas rediriger automatiquement ici pour éviter les conflits avec la déconnexion
     })
 
-    return () => {
-      isMounted = false
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleSignOut = async () => {

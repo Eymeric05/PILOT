@@ -19,62 +19,19 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    let isMounted = true
-    let redirecting = false
-    let checked = false
-
-    // Attendre un peu avant de vérifier pour éviter les redirections immédiates
-    const checkSession = async () => {
-      if (checked || redirecting) return
-      checked = true
-      
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (!isMounted || redirecting) return
-        
-        // Vérifier si la session est valide (pas seulement si elle existe)
-        if (session?.user && !error) {
-          // Vérifier que le token n'est pas expiré
-          const now = Math.floor(Date.now() / 1000)
-          if (!session.expires_at || session.expires_at > now) {
-            if (!redirecting) {
-              redirecting = true
-              router.replace("/")
-            }
-          }
-        }
-      } catch (err) {
-        // Ignorer les erreurs - on reste sur la page de login
-        console.warn("Erreur lors de la vérification de session:", err)
-      }
-    }
-
-    // Délai pour éviter les redirections trop rapides
-    const timeoutId = setTimeout(checkSession, 200)
-
-    // Écouter UNIQUEMENT les événements de connexion explicites
+    // Pas de vérification automatique - on reste sur la page de login
+    // L'utilisateur doit se connecter manuellement
+    // Redirection uniquement après une connexion réussie via le formulaire
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isMounted || redirecting) return
-      
-      // Ignorer tous les événements sauf SIGNED_IN explicite
-      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-        return
-      }
-      
-      // Seulement rediriger si on reçoit un événement de connexion explicite
-      if (event === 'SIGNED_IN' && session?.user && !redirecting) {
-        redirecting = true
+      // Seulement rediriger après une connexion réussie explicite (via formulaire)
+      if (event === 'SIGNED_IN' && session?.user) {
         router.replace("/")
       }
     })
 
     return () => {
-      isMounted = false
-      redirecting = true
-      checked = true
-      clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
   }, [router])
