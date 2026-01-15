@@ -19,23 +19,62 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté (vérification locale rapide)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        router.push("/")
+    let isMounted = true
+    let redirecting = false
+    let checked = false
+
+    // Attendre un peu avant de vérifier pour éviter les redirections immédiates
+    const checkSession = async () => {
+      if (checked) return
+      checked = true
+      
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (!isMounted) return
+        
+        // Vérifier si la session est valide (pas seulement si elle existe)
+        if (session?.user && !error) {
+          // Vérifier que le token n'est pas expiré
+          const now = Math.floor(Date.now() / 1000)
+          if (!session.expires_at || session.expires_at > now) {
+            if (!redirecting) {
+              redirecting = true
+              router.replace("/")
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error checking session:", err)
       }
-    })
+    }
+
+    // Délai pour éviter les redirections trop rapides
+    const timeoutId = setTimeout(checkSession, 100)
 
     // Écouter les changements d'authentification
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        router.push("/")
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return
+      
+      // Ignorer INITIAL_SESSION pour éviter les redirections immédiates
+      if (event === 'INITIAL_SESSION') {
+        return
+      }
+      
+      // Seulement rediriger si on reçoit un événement de connexion explicite
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user && !redirecting) {
+        redirecting = true
+        router.replace("/")
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      checked = true
+      clearTimeout(timeoutId)
+      subscription.unsubscribe()
+    }
   }, [router])
 
   const handleGoogleLogin = async () => {
