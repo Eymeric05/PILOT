@@ -57,9 +57,9 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         type="button"
         onClick={() => onFilterChange(activeFilter === "user1" ? null : "user1")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border transition-all duration-200 ease-out cursor-pointer",
-          "hover:bg-card/80 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "user1" && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border border-subtle transition-all duration-200 ease-out cursor-pointer shadow-none",
+          "hover:bg-card-hover hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "user1" && "border-accent-subtle bg-accent-subtle ring-1 ring-accent-subtle"
         )}
       >
         <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel A</span>
@@ -70,9 +70,9 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         type="button"
         onClick={() => onFilterChange(activeFilter === "shared" ? null : "shared")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border transition-all duration-200 ease-out cursor-pointer",
-          "hover:bg-card/80 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "shared" && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border border-subtle transition-all duration-200 ease-out cursor-pointer shadow-none",
+          "hover:bg-card-hover hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "shared" && "border-accent-subtle bg-accent-subtle ring-1 ring-accent-subtle"
         )}
       >
         <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Commun</span>
@@ -83,9 +83,9 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         type="button"
         onClick={() => onFilterChange(activeFilter === "user2" ? null : "user2")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border transition-all duration-200 ease-out cursor-pointer",
-          "hover:bg-card/80 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "user2" && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border border-subtle transition-all duration-200 ease-out cursor-pointer shadow-none",
+          "hover:bg-card-hover hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "user2" && "border-accent-subtle bg-accent-subtle ring-1 ring-accent-subtle"
         )}
       >
         <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel B</span>

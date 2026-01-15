@@ -18,7 +18,7 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
   const imageUrl = useFallback ? getGoogleFaviconUrl(name) : (logoUrl || getClearbitLogoUrl(name))
 
   return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted overflow-hidden border border-border/30">
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted overflow-hidden border border-subtle-30">
       <Image 
         src={imageUrl} 
         alt={name} 
@@ -44,9 +44,9 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
       {expenses.map((expense: any, index: number) => (
         <div 
           key={expense.id} 
-          className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4 h-20
-                     transition-all duration-200 ease-out
-                     hover:bg-card/80 hover:-translate-y-0.5 hover:border-border"
+          className="flex items-center gap-3 rounded-2xl bg-card border border-subtle p-4 h-20
+                     transition-all duration-200 ease-out shadow-none
+                     hover:bg-card-hover hover:-translate-y-0.5"
           style={{
             animation: mounted ? `fade-in 0.3s ease-out ${index * 50}ms both, slide-in-from-bottom 0.3s ease-out ${index * 50}ms both` : 'none',
           }}

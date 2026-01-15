@@ -65,6 +65,16 @@
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
   }
+  
+  /* Force l'application du fond anthracite en mode sombre */
+  .dark body {
+    background-color: hsl(210, 5%, 4%) !important;
+  }
+  
+  /* Supprime les ombres par défaut sur les cartes */
+  .bg-card {
+    box-shadow: none !important;
+  }
 }
 
 @keyframes fade-in {
@@ -84,6 +94,36 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@layer utilities {
+  .border-subtle {
+    border-color: hsl(var(--border) / 0.5);
+  }
+  
+  .border-subtle-30 {
+    border-color: hsl(var(--border) / 0.3);
+  }
+  
+  .border-subtle-20 {
+    border-color: hsl(var(--border) / 0.2);
+  }
+  
+  .bg-card-hover {
+    background-color: hsl(var(--card) / 0.8);
+  }
+  
+  .bg-accent-subtle {
+    background-color: hsl(var(--accent) / 0.05);
+  }
+  
+  .border-accent-subtle {
+    border-color: hsl(var(--accent) / 0.5);
+  }
+  
+  .ring-accent-subtle {
+    --tw-ring-color: hsl(var(--accent) / 0.2);
   }
 }
 

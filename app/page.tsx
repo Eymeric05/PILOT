@@ -186,7 +186,7 @@ export default function Home() {
                drop-shadow-xl shadow-2xl
                hover:scale-105 active:scale-95
                transition-all duration-200 ease-out
-               border border-border/20"
+               border border-subtle-20"
     aria-label="Ajouter une dépense"
   >
     <Plus className="h-10 w-10" strokeWidth={2.5} />
