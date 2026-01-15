@@ -25,12 +25,12 @@ export default function LoginPage() {
 
     // Attendre un peu avant de vérifier pour éviter les redirections immédiates
     const checkSession = async () => {
-      if (checked) return
+      if (checked || redirecting) return
       checked = true
       
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-        if (!isMounted) return
+        if (!isMounted || redirecting) return
         
         // Vérifier si la session est valide (pas seulement si elle existe)
         if (session?.user && !error) {
@@ -44,26 +44,27 @@ export default function LoginPage() {
           }
         }
       } catch (err) {
-        console.error("Error checking session:", err)
+        // Ignorer les erreurs - on reste sur la page de login
+        console.warn("Erreur lors de la vérification de session:", err)
       }
     }
 
     // Délai pour éviter les redirections trop rapides
-    const timeoutId = setTimeout(checkSession, 100)
+    const timeoutId = setTimeout(checkSession, 200)
 
-    // Écouter les changements d'authentification
+    // Écouter UNIQUEMENT les événements de connexion explicites
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isMounted) return
+      if (!isMounted || redirecting) return
       
-      // Ignorer INITIAL_SESSION pour éviter les redirections immédiates
-      if (event === 'INITIAL_SESSION') {
+      // Ignorer tous les événements sauf SIGNED_IN explicite
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
         return
       }
       
       // Seulement rediriger si on reçoit un événement de connexion explicite
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user && !redirecting) {
+      if (event === 'SIGNED_IN' && session?.user && !redirecting) {
         redirecting = true
         router.replace("/")
       }
@@ -71,6 +72,7 @@ export default function LoginPage() {
 
     return () => {
       isMounted = false
+      redirecting = true
       checked = true
       clearTimeout(timeoutId)
       subscription.unsubscribe()

@@ -38,10 +38,14 @@ export function UserProfile({ children }: UserProfileProps) {
   const router = useRouter()
 
   useEffect(() => {
+    let isMounted = true
+
     const checkUser = async () => {
       try {
-        // Utiliser getSession() pour une vérification locale rapide
+        // Utiliser getSession() pour une vérification locale rapide (pas de requête réseau)
         const { data: { session } } = await supabase.auth.getSession()
+        if (!isMounted) return
+
         if (session?.user) {
           setUser(session.user)
           setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
@@ -52,32 +56,33 @@ export function UserProfile({ children }: UserProfileProps) {
           setUser(null)
         }
       } catch (error) {
-        console.error("Error getting session:", error)
-        setUser(null)
+        // Ignorer les erreurs silencieusement
+        if (isMounted) {
+          setUser(null)
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
 
-      // Vérifier en arrière-plan pour les métadonnées mises à jour (sans bloquer)
-      supabase.auth.getUser().then(({ data: { user: validatedUser } }) => {
-        if (validatedUser) {
-          setUser(validatedUser)
-          setDisplayName(validatedUser.user_metadata?.display_name || validatedUser.email?.split("@")[0] || "")
-          setPartnerName(validatedUser.user_metadata?.partner_name || "Personnel B")
-          setProfilePicture(validatedUser.user_metadata?.profile_picture_url || null)
-          setPartnerProfilePicture(validatedUser.user_metadata?.partner_profile_picture_url || null)
-        }
-      }).catch(() => {
-        // Ignorer les erreurs réseau, on garde les données de la session locale
-      })
+      // NE PAS faire d'appel getUser() en arrière-plan - cela cause des erreurs réseau en boucle
+      // La session locale est suffisante
     }
 
     checkUser()
 
-    // Écouter les changements d'authentification
+    // Écouter UNIQUEMENT les changements d'authentification explicites
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return
+
+      // Ignorer INITIAL_SESSION et TOKEN_REFRESHED pour éviter les mises à jour inutiles
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        return
+      }
+
       setUser(session?.user ?? null)
       if (session?.user) {
         setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
@@ -85,10 +90,12 @@ export function UserProfile({ children }: UserProfileProps) {
         setProfilePicture(session.user.user_metadata?.profile_picture_url || null)
         setPartnerProfilePicture(session.user.user_metadata?.partner_profile_picture_url || null)
       }
-      // Ne pas rediriger automatiquement ici pour éviter les conflits avec la déconnexion
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const handleSignOut = async () => {

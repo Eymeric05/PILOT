@@ -46,7 +46,14 @@ export default function Home() {
   const loadCategories = async () => {
     try {
       const { data, error } = await supabase.from("categories").select("*")
-      if (error) throw error
+      if (error) {
+        // Ne pas logger les erreurs réseau en mode production pour éviter le spam
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('ERR_')) {
+          console.warn("Erreur réseau lors du chargement des catégories (on continue sans)")
+          return
+        }
+        throw error
+      }
 
       if (!data || data.length === 0) {
         const defaultCategories = [
@@ -55,14 +62,19 @@ export default function Home() {
           { name: "Transport", icon: "🚗" },
           { name: "Loisirs", icon: "🎉" },
         ]
-        const { data: inserted } = await supabase.from("categories").insert(defaultCategories).select()
-        if (inserted) {
-          setCategories(inserted.map(c => ({
-            id: c.id,
-            name: c.name,
-            icon: c.icon,
-            createdAt: new Date(c.created_at)
-          })))
+        try {
+          const { data: inserted } = await supabase.from("categories").insert(defaultCategories).select()
+          if (inserted) {
+            setCategories(inserted.map(c => ({
+              id: c.id,
+              name: c.name,
+              icon: c.icon,
+              createdAt: new Date(c.created_at)
+            })))
+          }
+        } catch (insertError) {
+          // Ignorer les erreurs d'insertion en cas de problème réseau
+          console.warn("Erreur lors de l'insertion des catégories par défaut:", insertError)
         }
       } else {
         setCategories(data.map(c => ({
@@ -72,7 +84,12 @@ export default function Home() {
           createdAt: new Date(c.created_at)
         })))
       }
-    } catch (err) {
+    } catch (err: any) {
+      // Ignorer les erreurs réseau - on continue sans catégories
+      if (err?.message?.includes('Failed to fetch') || err?.message?.includes('ERR_')) {
+        console.warn("Erreur réseau lors du chargement des catégories (on continue sans)")
+        return
+      }
       console.error("Erreur catégories:", err)
     }
   }
@@ -81,30 +98,39 @@ export default function Home() {
     try {
       const userExpenses = await fetchExpenses(userId, hId)
       setExpenses(userExpenses)
-    } catch (error) {
+    } catch (error: any) {
+      // Ignorer les erreurs réseau - on continue avec une liste vide
+      if (error?.message?.includes('Failed to fetch') || error?.message?.includes('ERR_')) {
+        console.warn("Erreur réseau lors du chargement des dépenses (on continue avec une liste vide)")
+        setExpenses([])
+        return
+      }
       console.error("Error loading expenses:", error)
+      setExpenses([])
     }
   }
 
   useEffect(() => {
     let isMounted = true
     let initDone = false
+    let hasCheckedSession = false
 
     const initApp = async () => {
-      if (initDone || hasInitializedRef.current) return
+      if (initDone || hasInitializedRef.current || hasCheckedSession) return
+      hasCheckedSession = true
       
       try {
         // D'abord, vérifier la session locale (rapide, pas de requête réseau)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
-      if (sessionError || !session?.user) {
-        // Pas de session locale, rediriger vers login
-        if (isMounted) {
-          setLoading(false)
-          router.replace("/login")
+        if (sessionError || !session?.user) {
+          // Pas de session locale, rediriger vers login
+          if (isMounted) {
+            setLoading(false)
+            router.replace("/login")
+          }
+          return
         }
-        return
-      }
 
         // Vérifier rapidement si la session est valide (vérification locale du token)
         const now = Math.floor(Date.now() / 1000)
@@ -125,29 +151,20 @@ export default function Home() {
           setUser(session.user)
           const hId = session.user.user_metadata?.household_id || null
           setHouseholdId(hId)
-          await Promise.all([loadExpenses(session.user.id, hId), loadCategories()])
+          
+          // Charger les données en silencieux (ne pas rediriger en cas d'erreur réseau)
+          try {
+            await Promise.all([loadExpenses(session.user.id, hId), loadCategories()])
+          } catch (loadError) {
+            // En cas d'erreur réseau, on continue quand même avec la session locale
+            console.warn("Erreur lors du chargement des données (on continue avec la session locale):", loadError)
+          }
+          
           setLoading(false)
         }
 
-        // Vérifier en arrière-plan si la session est toujours valide (sans bloquer l'UI)
-        supabase.auth.getUser().then(({ data: { user: validatedUser }, error: userError }) => {
-          if (!isMounted || !hasInitializedRef.current) return
-          
-          if (validatedUser && !userError) {
-            // Mettre à jour avec les métadonnées les plus récentes si nécessaire
-            const hId = validatedUser.user_metadata?.household_id || null
-            setUser(validatedUser)
-            setHouseholdId(hId)
-          } else if (!validatedUser && hasInitializedRef.current) {
-            // La session n'est plus valide, rediriger
-            hasInitializedRef.current = false
-            setLoading(false)
-            router.replace("/login")
-          }
-        }).catch(() => {
-          // En cas d'erreur réseau, on garde la session locale
-          // L'utilisateur pourra continuer à utiliser l'app
-        })
+        // NE PAS vérifier getUser() en arrière-plan - cela cause des boucles d'erreurs réseau
+        // La session locale est suffisante pour l'utilisateur
       } catch (error) {
         console.error("Error initializing app:", error)
         if (isMounted) {
@@ -159,28 +176,33 @@ export default function Home() {
     
     initApp()
 
-    // Écouter les changements d'authentification pour mettre à jour l'utilisateur
+    // Écouter UNIQUEMENT les changements d'authentification explicites (connexion/déconnexion)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
       
-      // Ignorer INITIAL_SESSION si on est déjà en train d'initialiser
-      if (event === 'INITIAL_SESSION' && !hasInitializedRef.current) {
+      // Ignorer INITIAL_SESSION complètement - on gère déjà ça avec getSession()
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
         return
       }
 
-      if (session?.user) {
-        hasInitializedRef.current = true
-        setUser(session.user)
-        const hId = session.user.user_metadata?.household_id || null
-        setHouseholdId(hId)
-        await loadExpenses(session.user.id, hId)
-        if (loading) {
-          await loadCategories()
+      // Seulement gérer les événements explicites de connexion/déconnexion
+      if (event === 'SIGNED_IN' && session?.user) {
+        if (!hasInitializedRef.current) {
+          hasInitializedRef.current = true
+          setUser(session.user)
+          const hId = session.user.user_metadata?.household_id || null
+          setHouseholdId(hId)
+          try {
+            await Promise.all([loadExpenses(session.user.id, hId), loadCategories()])
+          } catch (loadError) {
+            console.warn("Erreur lors du chargement des données:", loadError)
+          }
           setLoading(false)
         }
-      } else if (!session && hasInitializedRef.current) {
-        // Déconnexion détectée seulement si on était initialisé
+      } else if (event === 'SIGNED_OUT' && hasInitializedRef.current) {
+        // Déconnexion explicite
         hasInitializedRef.current = false
+        setUser(null)
         setLoading(false)
         router.replace("/login")
       }
@@ -188,7 +210,7 @@ export default function Home() {
 
     // Écouter les mises à jour des métadonnées utilisateur
     const handleUserMetadataUpdate = async () => {
-      if (isMounted) {
+      if (isMounted && hasInitializedRef.current) {
         const { data: { session: currentSession } } = await supabase.auth.getSession()
         if (currentSession?.user && isMounted) {
           setUser(currentSession.user)
@@ -200,7 +222,6 @@ export default function Home() {
 
     return () => { 
       isMounted = false
-      hasInitializedRef.current = false
       subscription.unsubscribe()
       window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
     }
