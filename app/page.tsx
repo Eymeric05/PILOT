@@ -102,7 +102,35 @@ export default function Home() {
       }
     }
     initApp()
-    return () => { isMounted = false }
+
+    // Écouter les changements d'authentification pour mettre à jour l'utilisateur
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user && isMounted) {
+        // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
+        const { data: { user: updatedUser } } = await supabase.auth.getUser()
+        if (updatedUser && isMounted) {
+          setUser(updatedUser)
+        }
+      }
+    })
+
+    // Écouter les mises à jour des métadonnées utilisateur
+    const handleUserMetadataUpdate = async () => {
+      if (isMounted) {
+        const { data: { user: updatedUser } } = await supabase.auth.getUser()
+        if (updatedUser && isMounted) {
+          setUser(updatedUser)
+        }
+      }
+    }
+
+    window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+
+    return () => { 
+      isMounted = false
+      subscription.unsubscribe()
+      window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+    }
   }, [router])
 
   useEffect(() => {

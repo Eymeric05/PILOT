@@ -67,6 +67,18 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   const user1Picture = user?.user_metadata?.profile_picture_url || null
   const user2Picture = user?.user_metadata?.partner_profile_picture_url || null
 
+  // Debug: vérifier que les photos sont bien récupérées
+  useEffect(() => {
+    if (user) {
+      console.log('User metadata:', {
+        profile_picture_url: user.user_metadata?.profile_picture_url ? 'Present' : 'Missing',
+        partner_profile_picture_url: user.user_metadata?.partner_profile_picture_url ? 'Present' : 'Missing',
+        user1Picture: user1Picture ? 'Present' : 'Missing',
+        user2Picture: user2Picture ? 'Present' : 'Missing',
+      })
+    }
+  }, [user, user1Picture, user2Picture])
+
   const cards = [
     { 
       label: user1Name, 
