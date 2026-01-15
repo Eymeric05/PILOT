@@ -64,8 +64,12 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   const user2Total = calculateZoneTotal(expenses, "user2", currentUser)
 
   // Récupérer les noms depuis user_metadata, avec fallback intelligent
+  const emailPart = user?.email?.split("@")[0]
+  const formattedEmail = emailPart 
+    ? emailPart.charAt(0).toUpperCase() + emailPart.slice(1)
+    : null
   const user1Name = user?.user_metadata?.display_name 
-    || user?.email?.split("@")[0]?.charAt(0).toUpperCase() + user?.email?.split("@")[0]?.slice(1)
+    || formattedEmail
     || "Personnel A"
   
   // Pour user2, utiliser le nom personnalisé ou garder "Personnel B" si non défini
@@ -74,24 +78,6 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   // Récupérer les photos depuis user_metadata
   const user1Picture = user?.user_metadata?.profile_picture_url || null
   const user2Picture = user?.user_metadata?.partner_profile_picture_url || null
-
-  // Debug: vérifier les valeurs récupérées
-  useEffect(() => {
-    if (user) {
-      console.log('[HorizonSplit] Métadonnées utilisateur:', {
-        user1Name,
-        user2Name,
-        user1Picture: user1Picture ? `Present (${user1Picture.substring(0, 30)}...)` : 'Missing',
-        user2Picture: user2Picture ? `Present (${user2Picture.substring(0, 30)}...)` : 'Missing',
-        raw_metadata: {
-          display_name: user.user_metadata?.display_name,
-          partner_name: user.user_metadata?.partner_name,
-          profile_picture_url: user.user_metadata?.profile_picture_url ? 'Present' : 'Missing',
-          partner_profile_picture_url: user.user_metadata?.partner_profile_picture_url ? 'Present' : 'Missing',
-        }
-      })
-    }
-  }, [user, user1Name, user2Name, user1Picture, user2Picture])
 
   const cards = [
     { 
@@ -179,7 +165,8 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
               <div className="relative mb-3">
                 <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border/50 mx-auto">
                   {card.picture.startsWith('data:image') ? (
-                    // Image base64
+                    // Image base64 - utiliser img pour base64
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={card.picture}
                       alt={card.label}

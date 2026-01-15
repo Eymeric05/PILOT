@@ -21,22 +21,7 @@ function getSupabaseClient(): SupabaseClient {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    const errorMsg = 'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
-    console.error('[SUPABASE INIT ERROR]', errorMsg, {
-      hasUrl: !!supabaseUrl,
-      hasKey: !!supabaseAnonKey,
-    })
-    throw new Error(errorMsg)
-  }
-
-  // Vérifier que l'URL utilise HTTPS (sauf en développement local)
-  if (!supabaseUrl.startsWith('https://') && !supabaseUrl.includes('localhost')) {
-    console.warn('[SUPABASE WARNING] URL ne commence pas par https://:', supabaseUrl.substring(0, 50))
-  }
-
-  // Vérifier le format de la clé
-  if (supabaseAnonKey.length < 20) {
-    console.warn('[SUPABASE WARNING] La clé API semble trop courte')
+    throw new Error('Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {

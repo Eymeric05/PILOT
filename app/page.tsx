@@ -94,33 +94,15 @@ export default function Home() {
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         
         if (!supabaseUrl || !supabaseKey) {
-          console.error('[AUTH ERROR] Variables d\'environnement manquantes:', {
-            hasUrl: !!supabaseUrl,
-            hasKey: !!supabaseKey,
-            url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'MISSING',
-          })
           setLoading(false)
           return
-        }
-
-        // Vérifier le protocole de l'URL
-        if (supabaseUrl && !supabaseUrl.startsWith('https://')) {
-          console.warn('[AUTH WARNING] URL Supabase n\'utilise pas HTTPS:', supabaseUrl.substring(0, 30))
         }
 
         const { data: { user }, error } = await supabase.auth.getUser()
         
         if (error) {
-          console.error('[AUTH ERROR] Erreur lors de la récupération de l\'utilisateur:', {
-            message: error.message,
-            status: error.status,
-            name: error.name,
-            url: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'UNKNOWN',
-          })
-          
           // Ne pas rediriger si c'est une erreur réseau pour éviter la boucle
           if (error.message.includes('ERR_CONNECTION_RESET') || error.message.includes('Failed to fetch')) {
-            console.error('[AUTH ERROR] Erreur réseau détectée - Arrêt de la boucle de redirection')
             setLoading(false)
             return
           }
@@ -134,7 +116,6 @@ export default function Home() {
         }
 
         if (!user) {
-          console.log('[AUTH] Aucun utilisateur trouvé - Redirection vers /login')
           router.push("/login")
           return
         }
@@ -143,26 +124,10 @@ export default function Home() {
           setUser(user)
           const hId = user.user_metadata?.household_id || null
           setHouseholdId(hId)
-          
-          // Debug: vérifier les métadonnées
-          console.log('[AUTH] Utilisateur connecté:', {
-            id: user.id,
-            email: user.email,
-            display_name: user.user_metadata?.display_name,
-            partner_name: user.user_metadata?.partner_name,
-            has_profile_picture: !!user.user_metadata?.profile_picture_url,
-            has_partner_picture: !!user.user_metadata?.partner_profile_picture_url,
-          })
-          
           await Promise.all([loadExpenses(user.id, hId), loadCategories()])
           setLoading(false)
         }
       } catch (error: any) {
-        console.error('[AUTH ERROR] Exception non gérée dans initApp:', {
-          message: error?.message,
-          stack: error?.stack,
-          name: error?.name,
-        })
         setLoading(false)
         // Ne pas rediriger en cas d'exception pour éviter la boucle
       }
@@ -171,11 +136,8 @@ export default function Home() {
 
     // Écouter les changements d'authentification pour mettre à jour l'utilisateur
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[AUTH] Auth state change:', event, session?.user?.email || 'No user')
-      
       if (isMounted) {
         if (event === 'SIGNED_OUT' || !session?.user) {
-          console.log('[AUTH] Déconnexion détectée - Nettoyage et redirection')
           setUser(null)
           setLoading(false)
           
@@ -195,18 +157,13 @@ export default function Home() {
               // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
               const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
               if (error) {
-                console.error('[AUTH ERROR] Erreur lors de la mise à jour de l\'utilisateur:', error.message)
                 return
               }
               if (updatedUser && isMounted) {
-                console.log('[AUTH] Utilisateur mis à jour avec métadonnées:', {
-                  display_name: updatedUser.user_metadata?.display_name,
-                  partner_name: updatedUser.user_metadata?.partner_name,
-                })
                 setUser(updatedUser)
               }
             } catch (error: any) {
-              console.error('[AUTH ERROR] Exception lors de la mise à jour:', error?.message)
+              // Erreur silencieuse
             }
           }
         }
@@ -219,14 +176,13 @@ export default function Home() {
         try {
           const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
           if (error) {
-            console.error('[AUTH ERROR] Erreur lors de la récupération des métadonnées:', error.message)
             return
           }
           if (updatedUser && isMounted) {
             setUser(updatedUser)
           }
         } catch (error: any) {
-          console.error('[AUTH ERROR] Exception lors de la mise à jour des métadonnées:', error?.message)
+          // Erreur silencieuse
         }
       }
     }
