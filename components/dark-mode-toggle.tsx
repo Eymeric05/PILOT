@@ -38,7 +38,7 @@ export function DarkModeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleDarkMode}
-      className="h-9 w-9"
+      className="h-9 w-9 rounded-xl"
       aria-label="Basculer le mode nuit"
     >
       {isDark ? (

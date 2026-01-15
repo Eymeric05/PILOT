@@ -143,12 +143,12 @@ export default function Home() {
       <div className="mx-auto max-w-md px-4 py-6">
         <header className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image src="/PILOT_logo.webp" alt="Logo" width={40} height={40} />
+            <Image src="/PILOT_logo.webp" alt="Logo" width={40} height={40} className="rounded-xl" />
             <div>
-              <h1 className="text-xl font-bold">
+              <h1 className="text-xl font-semibold tracking-tight">
                 {user?.user_metadata?.display_name || user?.email?.split("@")[0] || "PILOT"}
               </h1>
-              <p className="text-xs text-muted-foreground">Budget mensuel partagé</p>
+              <p className="text-xs text-muted-foreground tracking-tight">Budget mensuel partagé</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -181,10 +181,15 @@ export default function Home() {
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerTrigger asChild>
   <Button 
-    className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg p-0 flex items-center justify-center"
+    className="fixed bottom-6 right-6 h-16 w-16 rounded-full p-0 flex items-center justify-center 
+               bg-primary text-primary-foreground
+               drop-shadow-xl shadow-2xl
+               hover:scale-105 active:scale-95
+               transition-all duration-200 ease-out
+               border border-border/20"
     aria-label="Ajouter une dépense"
   >
-    <Plus className="h-10 w-10" strokeWidth={3} />
+    <Plus className="h-10 w-10" strokeWidth={2.5} />
   </Button>
 </DrawerTrigger>
           <DrawerContent>

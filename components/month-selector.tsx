@@ -50,7 +50,7 @@ export function MonthSelector({ currentDate, onDateChange }: MonthSelectorProps)
         <ChevronLeft className="h-5 w-5" />
       </Button>
       <div className="text-center">
-        <h2 className="text-lg font-medium tracking-tight">
+        <h2 className="text-lg font-semibold tracking-tight">
           {monthName} {year}
         </h2>
       </div>

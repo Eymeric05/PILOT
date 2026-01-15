@@ -119,9 +119,8 @@ export function UserProfile({ children }: UserProfileProps) {
     <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
       <DrawerTrigger asChild>
         {children || (
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
             <User className="h-4 w-4" />
-            Profil
           </Button>
         )}
       </DrawerTrigger>
@@ -133,8 +132,8 @@ export function UserProfile({ children }: UserProfileProps) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-8 space-y-4">
-          <div className="flex items-center gap-4 p-4 rounded-3xl bg-card shadow-sm">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/50">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <User className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
@@ -171,7 +170,7 @@ export function UserProfile({ children }: UserProfileProps) {
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-base truncate tracking-tight">
+                    <p className="font-semibold text-base truncate tracking-tight">
                       {user.user_metadata?.display_name || user.email?.split("@")[0] || "Utilisateur"}
                     </p>
                     <button
@@ -196,7 +195,7 @@ export function UserProfile({ children }: UserProfileProps) {
           <Button
             variant="outline"
             onClick={handleSignOut}
-            className="w-full gap-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+            className="w-full gap-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all duration-200"
           >
             <LogOut className="h-4 w-4" />
             Se déconnecter

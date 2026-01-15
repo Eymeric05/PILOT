@@ -57,39 +57,39 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         type="button"
         onClick={() => onFilterChange(activeFilter === "user1" ? null : "user1")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-3xl bg-card shadow-sm transition-all duration-200 ease-out",
-          "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "user1" && "ring-2 ring-accent shadow-md"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border transition-all duration-200 ease-out cursor-pointer",
+          "hover:bg-card/80 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "user1" && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
         )}
       >
         <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel A</span>
-        <span className="text-lg font-medium tracking-tight">{formatAmount(user1Total)}</span>
+        <span className="text-lg font-semibold tracking-tight">{formatAmount(user1Total)}</span>
       </button>
 
       <button
         type="button"
         onClick={() => onFilterChange(activeFilter === "shared" ? null : "shared")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-3xl bg-card shadow-sm transition-all duration-200 ease-out",
-          "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "shared" && "ring-2 ring-accent shadow-md"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border transition-all duration-200 ease-out cursor-pointer",
+          "hover:bg-card/80 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "shared" && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
         )}
       >
         <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Commun</span>
-        <span className="text-lg font-medium tracking-tight">{formatAmount(sharedTotal)}</span>
+        <span className="text-lg font-semibold tracking-tight">{formatAmount(sharedTotal)}</span>
       </button>
 
       <button
         type="button"
         onClick={() => onFilterChange(activeFilter === "user2" ? null : "user2")}
         className={cn(
-          "flex flex-col items-center justify-center p-4 rounded-3xl bg-card shadow-sm transition-all duration-200 ease-out",
-          "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
-          activeFilter === "user2" && "ring-2 ring-accent shadow-md"
+          "flex flex-col items-center justify-center p-4 rounded-2xl bg-card border transition-all duration-200 ease-out cursor-pointer",
+          "hover:bg-card/80 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]",
+          activeFilter === "user2" && "border-accent/50 bg-accent/5 ring-1 ring-accent/20"
         )}
       >
         <span className="text-xs text-muted-foreground mb-1 font-medium tracking-tight">Personnel B</span>
-        <span className="text-lg font-medium tracking-tight">{formatAmount(user2Total)}</span>
+        <span className="text-lg font-semibold tracking-tight">{formatAmount(user2Total)}</span>
       </button>
     </div>
   )

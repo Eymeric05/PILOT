@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"  
+import { useState, useEffect } from "react"  
 import { Expense, Category, UserRole } from "@/types" 
 import { formatAmount } from "@/lib/expense-utils"
 import { getClearbitLogoUrl, getGoogleFaviconUrl } from "@/lib/logo-utils"
@@ -12,18 +12,18 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
   const [useInitial, setUseInitial] = useState(false)
 
   if (useInitial) {
-    return <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-bold">{name.charAt(0)}</div>
+    return <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white font-semibold text-sm">{name.charAt(0)}</div>
   }
 
   const imageUrl = useFallback ? getGoogleFaviconUrl(name) : (logoUrl || getClearbitLogoUrl(name))
 
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded bg-muted overflow-hidden">
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted overflow-hidden border border-border/30">
       <Image 
         src={imageUrl} 
         alt={name} 
-        width={32} 
-        height={32} 
+        width={40} 
+        height={40} 
         unoptimized 
         className="object-contain"
         onError={() => useFallback ? setUseInitial(true) : setUseFallback(true)}
@@ -33,21 +33,50 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
 }
 
 export function ExpenseList({ expenses, categories, currentUser, onDelete }: any) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   return (
-    <div className="space-y-3">
-      {expenses.map((expense: any) => (
-        <div key={expense.id} className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm">
+    <div className="space-y-2.5">
+      {expenses.map((expense: any, index: number) => (
+        <div 
+          key={expense.id} 
+          className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4 h-20
+                     transition-all duration-200 ease-out
+                     hover:bg-card/80 hover:-translate-y-0.5 hover:border-border
+                     animate-in fade-in slide-in-from-bottom-2"
+          style={{
+            animationDelay: mounted ? `${index * 50}ms` : '0ms',
+            animationFillMode: 'both',
+          }}
+        >
           <LogoDisplay logoUrl={expense.logoUrl} name={expense.name} />
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-medium">{expense.name}</p>
-              {expense.isShared && <Users className="h-4 w-4 text-muted-foreground" />}
+              <p className="text-sm font-medium tracking-tight truncate">{expense.name}</p>
+              {expense.isShared && <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
             </div>
+            {expense.categoryId && categories.find((c: Category) => c.id === expense.categoryId) && (
+              <p className="text-xs text-muted-foreground tracking-tight mt-0.5">
+                {categories.find((c: Category) => c.id === expense.categoryId)?.icon} {categories.find((c: Category) => c.id === expense.categoryId)?.name}
+              </p>
+            )}
           </div>
-          <div className="text-right">
-            <p className="font-bold">{formatAmount(expense.amount)}</p>
+          <div className="text-right shrink-0">
+            <p className="font-semibold tracking-tight">{formatAmount(expense.amount)}</p>
           </div>
-          {onDelete && <button onClick={() => onDelete(expense.id)} className="p-1"><X className="h-4 w-4" /></button>}
+          {onDelete && (
+            <button 
+              onClick={() => onDelete(expense.id)} 
+              className="p-1.5 rounded-lg hover:bg-muted transition-colors duration-150 shrink-0"
+              aria-label="Supprimer"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
       ))}
     </div>

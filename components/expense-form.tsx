@@ -104,11 +104,11 @@ export function ExpenseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="name">Nom de la dépense</Label>
+        <Label htmlFor="name" className="text-sm font-medium tracking-tight">Nom de la dépense</Label>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted overflow-hidden border">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted overflow-hidden border border-border/30">
             {logoUrl ? (
               <Image
                 src={logoUrl}
@@ -133,7 +133,7 @@ export function ExpenseForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount">Montant (€)</Label>
+        <Label htmlFor="amount" className="text-sm font-medium tracking-tight">Montant (€)</Label>
         <Input
           id="amount"
           type="number"
@@ -146,7 +146,7 @@ export function ExpenseForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="category">Catégorie</Label>
+        <Label htmlFor="category" className="text-sm font-medium tracking-tight">Catégorie</Label>
         <Select value={categoryId} onValueChange={setCategoryId}>
           <SelectTrigger id="category">
             <SelectValue placeholder="Choisir une catégorie" />
@@ -162,19 +162,18 @@ export function ExpenseForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="expenseDate">Date de la dépense</Label>
+        <Label htmlFor="expenseDate" className="text-sm font-medium tracking-tight">Date de la dépense</Label>
         <Input
           id="expenseDate"
           type="date"
           value={expenseDate}
           onChange={(e) => setExpenseDate(e.target.value)}
           required
-          className="h-10 sm:h-11 text-sm"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="paidBy">Payé par</Label>
+        <Label htmlFor="paidBy" className="text-sm font-medium tracking-tight">Payé par</Label>
         <Select value={paidBy} onValueChange={(value) => setPaidBy(value as UserRole)}>
           <SelectTrigger id="paidBy">
             <SelectValue />
@@ -186,29 +185,29 @@ export function ExpenseForm({
         </Select>
       </div>
 
-      <div className="flex items-center gap-3 py-0.5 sm:py-1">
+      <div className="flex items-center gap-3 py-1">
         <input
           type="checkbox"
           id="isShared"
           checked={isShared}
           onChange={(e) => setIsShared(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300"
+          className="h-4 w-4 rounded border-border/50 accent-primary transition-colors"
         />
-        <Label htmlFor="isShared" className="text-sm font-normal">Partager la dépense</Label>
+        <Label htmlFor="isShared" className="text-sm font-normal tracking-tight cursor-pointer">Partager la dépense</Label>
       </div>
 
-      <div className="flex items-center gap-3 py-0.5 sm:py-1">
+      <div className="flex items-center gap-3 py-1">
         <input
           type="checkbox"
           id="isRecurring"
           checked={isRecurring}
           onChange={(e) => setIsRecurring(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300"
+          className="h-4 w-4 rounded border-border/50 accent-primary transition-colors"
         />
-        <Label htmlFor="isRecurring" className="text-sm font-normal">Répéter chaque mois (12 mois)</Label>
+        <Label htmlFor="isRecurring" className="text-sm font-normal tracking-tight cursor-pointer">Répéter chaque mois (12 mois)</Label>
       </div>
 
-      <div className="flex gap-3 pt-2 sm:pt-4">
+      <div className="flex gap-3 pt-2">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
             Annuler
