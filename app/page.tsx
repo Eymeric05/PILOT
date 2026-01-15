@@ -102,35 +102,7 @@ export default function Home() {
       }
     }
     initApp()
-
-    // Écouter les changements d'authentification pour mettre à jour l'utilisateur
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user && isMounted) {
-        // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
-        const { data: { user: updatedUser } } = await supabase.auth.getUser()
-        if (updatedUser && isMounted) {
-          setUser(updatedUser)
-        }
-      }
-    })
-
-    // Écouter les mises à jour des métadonnées utilisateur
-    const handleUserMetadataUpdate = async () => {
-      if (isMounted) {
-        const { data: { user: updatedUser } } = await supabase.auth.getUser()
-        if (updatedUser && isMounted) {
-          setUser(updatedUser)
-        }
-      }
-    }
-
-    window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
-
-    return () => { 
-      isMounted = false
-      subscription.unsubscribe()
-      window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
-    }
+    return () => { isMounted = false }
   }, [router])
 
   useEffect(() => {
@@ -184,9 +156,7 @@ export default function Home() {
   }, [filteredExpenses])
 
   const handleAddExpense = async (expenseData: any) => {
-    if (!user) {
-      throw new Error("Utilisateur non connecté")
-    }
+    if (!user) return
     try {
       await createExpense(
         expenseData,
@@ -198,8 +168,6 @@ export default function Home() {
       setDrawerOpen(false)
     } catch (error: any) {
       console.error("Error adding expense:", error)
-      alert(`Erreur lors de l'ajout de la dépense: ${error.message || "Une erreur est survenue"}`)
-      throw error // Re-lancer l'erreur pour que le formulaire ne se reset pas
     }
   }
 

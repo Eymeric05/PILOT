@@ -197,9 +197,6 @@ export function UserProfile({ children }: UserProfileProps) {
               [metadataKey]: base64String,
             },
           })
-
-          // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
-          window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
         } catch (error: any) {
           console.error("Error uploading picture:", error)
           alert(`Erreur lors du téléchargement: ${error.message}`)
@@ -245,9 +242,6 @@ export function UserProfile({ children }: UserProfileProps) {
           [metadataKey]: null,
         },
       })
-
-      // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
-      window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
     } catch (error: any) {
       console.error("Error removing picture:", error)
       alert(`Erreur lors de la suppression: ${error.message}`)

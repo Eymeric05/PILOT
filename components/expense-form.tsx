@@ -29,7 +29,7 @@ interface ExpenseFormProps {
     logoUrl: string | null
     expenseDate: Date
     isRecurring: boolean
-  }) => Promise<void>
+  }) => void
   onCancel?: () => void
 }
 
@@ -77,42 +77,30 @@ export function ExpenseForm({
     return () => clearTimeout(timer)
   }, [name])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !amount || !categoryId) return
 
     // Utilisation finale de l'URL Logo.dev pour la BDD
     const finalLogoUrl = getLogoDevUrl(name.trim())
 
-    try {
-      await onSubmit({
-        name: name.trim(),
-        amount,
-        categoryId,
-        paidBy: paidBy || userId,
-        isShared,
-        logoUrl: finalLogoUrl,
-        expenseDate: new Date(expenseDate),
-        isRecurring,
-      })
+    onSubmit({
+      name: name.trim(),
+      amount,
+      categoryId,
+      paidBy: paidBy || userId,
+      isShared,
+      logoUrl: finalLogoUrl,
+      expenseDate: new Date(expenseDate),
+      isRecurring,
+    })
 
-      // Reset form seulement après succès
-      setName("")
-      setAmount("")
-      setIsShared(true)
-      setLogoUrl(null)
-      setIsRecurring(false)
-      setExpenseDate(() => {
-        const today = new Date()
-        return today.toISOString().split("T")[0]
-      })
-      if (categories.length > 0) {
-        setCategoryId(categories[0].id)
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error)
-      // Ne pas reset le formulaire en cas d'erreur
-    }
+    // Reset form
+    setName("")
+    setAmount("")
+    setIsShared(true)
+    setLogoUrl(null)
+    setIsRecurring(false)
   }
 
   return (
