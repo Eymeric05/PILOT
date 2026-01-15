@@ -77,10 +77,10 @@ export function getDomainWithFallback(name: string): string {
 }
 
 /**
- * Génère une URL de logo Clearbit
+ * Génère une URL de logo via logo.dev
  * Retourne toujours une URL (jamais null)
  * @param name - Le nom de l'entreprise
- * @param greyscale - Si true, retourne le logo en niveaux de gris (par défaut: true)
+ * @param greyscale - Paramètre ignoré (conservé pour compatibilité)
  */
 export function getClearbitLogoUrl(name: string, greyscale: boolean = true): string {
   if (!name || name.length < 1) {
@@ -88,8 +88,8 @@ export function getClearbitLogoUrl(name: string, greyscale: boolean = true): str
   }
 
   const domain = extractDomainFromName(name);
-  const greyscaleParam = greyscale ? "?greyscale=true" : "";
-  return `https://logo.clearbit.com/${domain}${greyscaleParam}`;
+  const apiToken = "pk_WouWW28wRw6g3LkkOhbwFg";
+  return `https://img.logo.dev/${domain}?token=${apiToken}`;
 }
 
 /**

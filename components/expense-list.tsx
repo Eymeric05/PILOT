@@ -58,25 +58,14 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
     // Utiliser Google Favicon en secours
     imageUrl = getGoogleFaviconUrl(name)
   } else if (logoUrl) {
-    // Utiliser l'URL Clearbit stockée
+    // Utiliser l'URL logo.dev stockée
     imageUrl = logoUrl
   } else {
-    // Générer l'URL Clearbit à partir du nom
+    // Générer l'URL logo.dev à partir du nom
     imageUrl = getClearbitLogoUrl(name, true)
   }
 
-  // Convertir l'URL en niveaux de gris si c'est Clearbit
-  let greyscaleUrl = imageUrl
-  let colorUrl = imageUrl
-  
-  if (imageUrl.includes("clearbit.com") && imageUrl.includes("greyscale=true")) {
-    colorUrl = imageUrl.replace(/[?&]greyscale=true/, "").replace(/[?&]$/, "")
-  } else if (imageUrl.includes("clearbit.com") && !imageUrl.includes("greyscale=true")) {
-    greyscaleUrl = imageUrl.includes("?") 
-      ? `${imageUrl}&greyscale=true`
-      : `${imageUrl}?greyscale=true`
-  }
-
+  // logo.dev ne supporte pas les niveaux de gris, on utilise toujours l'URL en couleur
   return (
     <div 
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted"
@@ -84,7 +73,7 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
       onMouseLeave={() => setIsHovered(false)}
     >
       <img
-        src={isHovered && imageUrl.includes("clearbit.com") ? colorUrl : greyscaleUrl}
+        src={imageUrl}
         alt={name}
         className="h-8 w-8 rounded object-contain transition-opacity duration-300 ease-out"
         onError={() => {
