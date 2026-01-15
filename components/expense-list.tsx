@@ -40,7 +40,7 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete }: any
   }, [])
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5 animate-fade-in animate-slide-in-from-bottom">
       {expenses.map((expense: any, index: number) => (
         <div 
           key={expense.id} 

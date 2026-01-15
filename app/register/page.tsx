@@ -126,7 +126,7 @@ export default function RegisterPage() {
             </div>
           </Link>
           <p className="text-sm text-muted-foreground tracking-tight">
-            Budget mensuel partagé
+            Application de gestion de budget
           </p>
         </div>
         <div className="rounded-3xl bg-card shadow-sm p-8 space-y-6">

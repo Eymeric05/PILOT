@@ -27,24 +27,24 @@
   }
 
   .dark {
-    --background: 210 5% 4%;
+    --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    --card: 210 5% 8%;
+    --card: 240 10% 6%;
     --card-foreground: 0 0% 98%;
-    --popover: 210 5% 8%;
+    --popover: 240 10% 6%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
     --primary-foreground: 0 0% 3.9%;
-    --secondary: 210 5% 12%;
+    --secondary: 240 10% 12%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 210 5% 12%;
+    --muted: 240 10% 12%;
     --muted-foreground: 0 0% 63.9%;
     --accent: 239 60% 55%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 210 5% 15%;
-    --input: 210 5% 12%;
+    --border: 240 10% 15%;
+    --input: 240 10% 12%;
     --ring: 0 0% 83.1%;
   }
 }
@@ -64,11 +64,6 @@
   
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
-  }
-  
-  /* Force l'application du fond anthracite en mode sombre */
-  .dark body {
-    background-color: hsl(210, 5%, 4%) !important;
   }
   
   /* Supprime les ombres par défaut sur les cartes */

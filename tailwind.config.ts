@@ -8,22 +8,6 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
 	],
-  safelist: [
-    'rounded-2xl',
-    'rounded-3xl',
-    'rounded-xl',
-    'border-subtle',
-    'border-subtle-30',
-    'border-subtle-20',
-    'bg-card-hover',
-    'bg-accent-subtle',
-    'border-accent-subtle',
-    'ring-accent-subtle',
-    'hover:-translate-y-0.5',
-    'tracking-tight',
-    'font-semibold',
-    'shadow-none',
-  ],
   prefix: "",
   theme: {
     container: {
@@ -35,7 +19,7 @@ const config = {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
+        border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",

@@ -101,7 +101,7 @@ export default function LoginPage() {
             </div>
           </Link>
           <p className="text-sm text-muted-foreground tracking-tight">
-            Budget mensuel partagé
+            Application de gestion de budget
           </p>
         </div>
         <div className="rounded-3xl bg-card shadow-sm p-8 space-y-6">
@@ -110,7 +110,7 @@ export default function LoginPage() {
               Connexion
             </h2>
             <p className="text-sm text-muted-foreground tracking-tight">
-              Connectez-vous pour accéder à votre budget
+              Connectez-vous pour accéder à votre application de gestion de budget
             </p>
           </div>
 
