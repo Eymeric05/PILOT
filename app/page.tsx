@@ -181,15 +181,15 @@ export default function Home() {
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg">
-              <Plus className="h-6 w-6" />
+              <Plus className="h-8 w-8" />
             </Button>
           </DrawerTrigger>
           <DrawerContent>
-            <DrawerHeader className="text-left">
+            <DrawerHeader className="text-left pb-2">
               <DrawerTitle>Nouvelle dépense</DrawerTitle>
               <DrawerDescription>Ajoutez une dépense à votre budget</DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-8">
+            <div className="px-4 pb-6 sm:pb-8">
               <ExpenseForm
                 categories={categories}
                 currentUser={currentUser}

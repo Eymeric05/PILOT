@@ -104,7 +104,7 @@ export function ExpenseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
       <div className="space-y-2">
         <Label htmlFor="name">Nom de la dépense</Label>
         <div className="flex items-center gap-3">
@@ -169,6 +169,7 @@ export function ExpenseForm({
           value={expenseDate}
           onChange={(e) => setExpenseDate(e.target.value)}
           required
+          className="h-10 sm:h-11 text-sm"
         />
       </div>
 
@@ -185,7 +186,7 @@ export function ExpenseForm({
         </Select>
       </div>
 
-      <div className="flex items-center gap-3 py-1">
+      <div className="flex items-center gap-3 py-0.5 sm:py-1">
         <input
           type="checkbox"
           id="isShared"
@@ -196,7 +197,7 @@ export function ExpenseForm({
         <Label htmlFor="isShared" className="text-sm font-normal">Partager la dépense</Label>
       </div>
 
-      <div className="flex items-center gap-3 py-1">
+      <div className="flex items-center gap-3 py-0.5 sm:py-1">
         <input
           type="checkbox"
           id="isRecurring"
@@ -207,7 +208,7 @@ export function ExpenseForm({
         <Label htmlFor="isRecurring" className="text-sm font-normal">Répéter chaque mois (12 mois)</Label>
       </div>
 
-      <div className="flex gap-3 pt-4">
+      <div className="flex gap-3 pt-2 sm:pt-4">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
             Annuler
