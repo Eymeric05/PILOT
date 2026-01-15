@@ -201,7 +201,7 @@ export function ExpenseForm({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={userId}>Moi</SelectItem>
-            <SelectItem value="partner">Partenaire</SelectItem>
+            <SelectItem value="partner">Mon partenaire</SelectItem>
           </SelectContent>
         </Select>
       </div>

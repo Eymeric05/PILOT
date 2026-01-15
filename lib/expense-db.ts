@@ -91,8 +91,9 @@ export async function createExpense(
   if (error) {
     console.error("Error creating expense:", error)
     console.log("Error details:", JSON.stringify(error, null, 2))
-    const errorMessage = error.message || error.details || JSON.stringify(error, null, 2)
-    alert(`Erreur SQL lors de l'ajout de la dépense:\n${errorMessage}\n\nCode: ${error.code}\nDétails: ${error.details || "Aucun détail"}`)
+    // Afficher l'erreur SQL brute complète
+    const errorMessage = JSON.stringify(error, null, 2)
+    alert(`Erreur SQL lors de l'ajout de la dépense:\n\n${errorMessage}`)
     throw error
   }
 
