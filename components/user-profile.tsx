@@ -56,21 +56,21 @@ export function UserProfile({ children }: UserProfileProps) {
         setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
       }
       if (!session?.user) {
-        window.location.href = "/login"
+        router.push("/login")
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [router])
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut()
       setDrawerOpen(false)
-      window.location.href = "/login"
+      router.push("/login")
     } catch (error) {
       console.error("Error signing out:", error)
-      window.location.href = "/login"
+      router.push("/login")
     }
   }
 

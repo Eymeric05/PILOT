@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -25,6 +26,7 @@ import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
 
 export default function Home() {
+  const router = useRouter()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -140,27 +142,52 @@ export default function Home() {
 
   // Charger l'utilisateur et les dépenses
   useEffect(() => {
+    let isMounted = true
+
     const checkUser = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser()
-        if (error) throw error
         
-        if (user) {
+        if (error) {
+          console.error("Error checking user:", error)
+          if (isMounted) {
+            setLoading(false)
+            router.push("/login")
+          }
+          return
+        }
+        
+        if (!user) {
+          if (isMounted) {
+            setLoading(false)
+            router.push("/login")
+          }
+          return
+        }
+
+        if (isMounted) {
           setUser(user)
           const householdId = user.user_metadata?.household_id || null
           setHouseholdId(householdId)
-          await loadExpenses(user.id, householdId)
-          await loadCategories()
-        } else {
-          window.location.href = "/login"
-          return
+          
+          try {
+            await Promise.all([
+              loadExpenses(user.id, householdId),
+              loadCategories()
+            ])
+          } catch (loadError) {
+            console.error("Error loading data:", loadError)
+            // On continue quand même, on ne bloque pas l'interface
+          }
+          
+          setLoading(false)
         }
       } catch (error) {
         console.error("Error checking user:", error)
-        window.location.href = "/login"
-        return
-      } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+          router.push("/login")
+        }
       }
     }
 
@@ -170,21 +197,33 @@ export default function Home() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return
+      
       const currentUser = session?.user ?? null
       setUser(currentUser)
+      
       if (currentUser) {
         const householdId = currentUser.user_metadata?.household_id || null
         setHouseholdId(householdId)
-        await loadExpenses(currentUser.id, householdId)
-        await loadCategories()
+        try {
+          await Promise.all([
+            loadExpenses(currentUser.id, householdId),
+            loadCategories()
+          ])
+        } catch (loadError) {
+          console.error("Error loading data:", loadError)
+        }
       } else {
         setExpenses([])
-        window.location.href = "/login"
+        router.push("/login")
       }
     })
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [router])
 
   // Filtrer les dépenses du mois courant
   const monthlyExpenses = useMemo(() => {
