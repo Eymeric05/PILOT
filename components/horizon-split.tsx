@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import Image from "next/image"
-import { User } from "lucide-react"
+import { User, Users } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 export type FilterZone = "user1" | "shared" | "user2" | null
@@ -162,13 +162,19 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
                   />
                 </div>
               </div>
-            ) : card.filter !== "shared" ? (
+            ) : card.filter === "shared" ? (
+              <div className="relative mb-3 flex justify-center">
+                <div className="h-12 w-12 rounded-full bg-purple-500/10 border-2 border-border/50 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-purple-400" />
+                </div>
+              </div>
+            ) : (
               <div className="relative mb-3 flex justify-center">
                 <div className="h-12 w-12 rounded-full bg-primary/10 border-2 border-border/50 flex items-center justify-center">
                   <User className="h-6 w-6 text-primary" />
                 </div>
               </div>
-            ) : null}
+            )}
 
             <span className="relative text-xs font-semibold text-muted-foreground mb-3 tracking-widest uppercase">
               {card.label}
