@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { UserPlus, Mail } from "lucide-react"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
@@ -113,9 +114,11 @@ export default function RegisterPage() {
           <Link href="/" className="inline-block">
             <div className="flex items-center justify-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="h-14 w-14 flex items-center justify-center">
-                <img
+                <Image
                   src="/PILOT_logo.webp"
                   alt="PILOT"
+                  width={56}
+                  height={56}
                   className="h-full w-full object-contain"
                 />
               </div>

@@ -66,6 +66,8 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
   }
 
   // logo.dev ne supporte pas les niveaux de gris, on utilise toujours l'URL en couleur
+  // Utilisation de <img> natif pour les images dynamiques externes avec gestion d'erreur
+  // eslint-disable-next-line @next/next/no-img-element
   return (
     <div 
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted"

@@ -24,6 +24,7 @@ import { Expense, UserRole, Category } from "@/types"
 import { Plus } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
+import Image from "next/image"
 
 export default function Home() {
   const router = useRouter()
@@ -215,7 +216,7 @@ export default function Home() {
     }
 
     return monthlyExpenses
-  }, [monthlyExpenses, activeFilter])
+  }, [monthlyExpenses, activeFilter, currentUser])
 
   // Calculer le total du mois
   const monthlyTotal = useMemo(() => {
@@ -302,9 +303,11 @@ export default function Home() {
         <header className="mb-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="h-10 w-10 shrink-0 flex items-center justify-center">
-              <img
+              <Image
                 src="/PILOT_logo.webp"
                 alt="PILOT"
+                width={40}
+                height={40}
                 className="h-full w-full object-contain"
               />
             </div>

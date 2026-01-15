@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { LogIn, Mail } from "lucide-react"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -88,9 +89,11 @@ export default function LoginPage() {
           <Link href="/" className="inline-block">
             <div className="flex items-center justify-center gap-3 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="h-14 w-14 flex items-center justify-center">
-                <img
+                <Image
                   src="/PILOT_logo.webp"
                   alt="PILOT"
+                  width={56}
+                  height={56}
                   className="h-full w-full object-contain"
                 />
               </div>
@@ -198,7 +201,7 @@ export default function LoginPage() {
               href="/register"
               className="text-muted-foreground hover:text-foreground transition-colors duration-200 underline underline-offset-2"
             >
-              Pas encore de compte ? S'inscrire
+              Pas encore de compte ? S&apos;inscrire
             </Link>
           </div>
         </div>
