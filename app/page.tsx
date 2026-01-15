@@ -87,6 +87,8 @@ export default function Home() {
 
   useEffect(() => {
     let isMounted = true
+    let redirecting = false
+
     const initApp = async () => {
       try {
         // Vérifier d'abord la session (plus rapide que getUser)
@@ -94,8 +96,9 @@ export default function Home() {
         
         if (sessionError || !session?.user) {
           // Pas de session valide, rediriger vers login
-          if (isMounted) {
+          if (isMounted && !redirecting) {
             setLoading(false)
+            redirecting = true
             router.replace("/login")
           }
           return
@@ -106,8 +109,9 @@ export default function Home() {
         
         if (userError || !user) {
           // Erreur ou pas d'utilisateur, rediriger vers login
-          if (isMounted) {
+          if (isMounted && !redirecting) {
             setLoading(false)
+            redirecting = true
             router.replace("/login")
           }
           return
@@ -124,8 +128,9 @@ export default function Home() {
       } catch (error) {
         console.error("Erreur lors de l'initialisation:", error)
         // En cas d'erreur, rediriger vers login
-        if (isMounted) {
+        if (isMounted && !redirecting) {
           setLoading(false)
+          redirecting = true
           router.replace("/login")
         }
       }
@@ -134,7 +139,7 @@ export default function Home() {
 
     // Écouter les changements d'authentification pour mettre à jour l'utilisateur
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return
+      if (!isMounted || redirecting) return
       
       if (session?.user) {
         // Utilisateur connecté : recharger l'utilisateur pour obtenir les métadonnées mises à jour
@@ -144,9 +149,11 @@ export default function Home() {
           const hId = updatedUser.user_metadata?.household_id || null
           setHouseholdId(hId)
         }
-      } else if (!session) {
-        // Pas de session : rediriger vers login
-        if (isMounted) {
+      } else if (!session && event === 'SIGNED_OUT') {
+        // Seulement rediriger explicitement lors d'une déconnexion
+        // Ne pas rediriger sur TOKEN_REFRESHED car cela peut créer des boucles
+        if (isMounted && !redirecting) {
+          redirecting = true
           router.replace("/login")
         }
       }
