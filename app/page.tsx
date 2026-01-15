@@ -181,7 +181,7 @@ export default function Home() {
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg">
-              <Plus className="h-8 w-8" />
+              <Plus className="h-10 w-10" />
             </Button>
           </DrawerTrigger>
           <DrawerContent>
