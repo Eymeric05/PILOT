@@ -23,10 +23,9 @@ interface HorizonSplitProps {
 function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "user2", currentUser: UserRole): number {
   return expenses.reduce((total, expense) => {
     if (zone === "shared") {
-      // Pour la zone "Commun", on compte le montant COMPLET de chaque dépense partagée
-      // (sans division, car c'est le total des dépenses partagées)
+      // Pour la zone "Commun", on compte la moitié de chaque dépense partagée
       if (expense.isShared) {
-        return total + parseFloat(expense.amount)
+        return total + parseFloat(expense.amount) / 2
       }
       return total
     } else if (zone === "user1") {
