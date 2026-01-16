@@ -125,6 +125,31 @@ export default function Home() {
           console.warn('[AUTH WARNING] URL Supabase n\'utilise pas HTTPS:', supabaseUrl.substring(0, 30))
         }
 
+        // Nettoyer les sessions corrompues avant de vérifier l'utilisateur
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) {
+            // Pas de session valide, nettoyer le storage
+            if (typeof window !== 'undefined') {
+              // Nettoyer toutes les clés Supabase du localStorage
+              Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-') || key.includes('supabase')) {
+                  localStorage.removeItem(key)
+                }
+              })
+            }
+          }
+        } catch (sessionError) {
+          // Erreur lors de la récupération de la session, nettoyer le storage
+          if (typeof window !== 'undefined') {
+            Object.keys(localStorage).forEach(key => {
+              if (key.startsWith('sb-') || key.includes('supabase')) {
+                localStorage.removeItem(key)
+              }
+            })
+          }
+        }
+
         const { data: { user }, error } = await supabase.auth.getUser()
         
         if (error) {
