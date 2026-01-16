@@ -37,6 +37,7 @@ export default function Home() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [householdId, setHouseholdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [connectionError, setConnectionError] = useState<string | null>(null)
   const headerRef = useRef<HTMLElement>(null)
   const fabRef = useRef<HTMLDivElement>(null)
 
@@ -45,17 +46,26 @@ export default function Home() {
   const loadCategories = async () => {
     try {
       const { data, error } = await supabase.from("categories").select("*")
+      
+      console.log('[CATEGORIES] Résultat de la requête:', { data, error, count: data?.length || 0 })
+      
       if (error) throw error
 
       if (!data || data.length === 0) {
-        const defaultCategories = [
-          { name: "Alimentation", icon: "🛒" },
-          { name: "Logement", icon: "🏠" },
-          { name: "Transport", icon: "🚗" },
-          { name: "Loisirs", icon: "🎉" },
-        ]
-        const { data: inserted } = await supabase.from("categories").insert(defaultCategories).select()
-        if (inserted) {
+        // Forcer l'insertion d'une catégorie par défaut si la liste est vide
+        const defaultCategory = { name: "Divers", icon: "📦" }
+        const { data: inserted, error: insertError } = await supabase.from("categories").insert(defaultCategory).select()
+        
+        if (insertError) {
+          console.error("Erreur insertion catégorie par défaut:", insertError)
+          // Créer une catégorie par défaut en mémoire si l'insertion échoue
+          setCategories([{
+            id: 'default',
+            name: 'Divers',
+            icon: '📦',
+            createdAt: new Date()
+          }])
+        } else if (inserted && inserted.length > 0) {
           setCategories(inserted.map(c => ({
             id: c.id,
             name: c.name,
@@ -73,6 +83,13 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Erreur catégories:", err)
+      // En cas d'erreur, forcer une catégorie par défaut
+      setCategories([{
+        id: 'default',
+        name: 'Divers',
+        icon: '📦',
+        createdAt: new Date()
+      }])
     }
   }
 
@@ -121,6 +138,7 @@ export default function Home() {
           // Ne pas rediriger si c'est une erreur réseau pour éviter la boucle
           if (error.message.includes('ERR_CONNECTION_RESET') || error.message.includes('Failed to fetch')) {
             console.error('[AUTH ERROR] Erreur réseau détectée - Arrêt de la boucle de redirection')
+            setConnectionError('Serveur Supabase injoignable')
             setLoading(false)
             return
           }
@@ -163,6 +181,12 @@ export default function Home() {
           stack: error?.stack,
           name: error?.name,
         })
+        
+        // Afficher une bannière d'erreur si c'est une erreur de connexion
+        if (error?.message?.includes('Failed to fetch') || error?.message?.includes('ERR_CONNECTION_RESET')) {
+          setConnectionError('Serveur Supabase injoignable')
+        }
+        
         setLoading(false)
         // Ne pas rediriger en cas d'exception pour éviter la boucle
       }
@@ -382,6 +406,29 @@ export default function Home() {
             <UserProfile />
           </div>
         </motion.header>
+
+        {/* Bannière d'erreur de connexion */}
+        {connectionError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-4 p-4 rounded-2xl glass border-2 border-destructive/50 bg-destructive/10"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-destructive">{connectionError}</p>
+              <button
+                onClick={() => setConnectionError(null)}
+                className="text-destructive/70 hover:text-destructive transition-colors"
+                aria-label="Fermer"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         <MonthSelector currentDate={currentDate} onDateChange={setCurrentDate} />
 

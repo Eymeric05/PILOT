@@ -41,7 +41,7 @@ function getSupabaseClient(): SupabaseClient {
 
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      persistSession: true,
+      persistSession: false, // Temporairement désactivé pour éviter les conflits de session locale
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
