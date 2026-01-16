@@ -10,25 +10,38 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Récupérer le code depuis l'URL
-        const { data, error } = await supabase.auth.getSession()
+        // Attendre un peu pour que Supabase traite le callback
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Récupérer la session depuis l'URL (Supabase gère automatiquement les callbacks OAuth)
+        const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
           console.error("Error getting session:", error)
-          router.push("/login")
+          // Attendre un peu avant de rediriger pour laisser le temps à Supabase
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          router.replace("/login")
           return
         }
 
-        if (data.session) {
+        if (session?.user) {
           // L'utilisateur est connecté, rediriger vers la page d'accueil
-          router.push("/")
+          router.replace("/")
         } else {
-          // Pas de session, rediriger vers la page de connexion
-          router.push("/login")
+          // Pas de session, attendre un peu et réessayer
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          const { data: { session: retrySession } } = await supabase.auth.getSession()
+          if (retrySession?.user) {
+            router.replace("/")
+          } else {
+            router.replace("/login")
+          }
         }
       } catch (error) {
         console.error("Error in auth callback:", error)
-        router.push("/login")
+        // Attendre avant de rediriger
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        router.replace("/login")
       }
     }
 
