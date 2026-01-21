@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { User } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server'
 
-export async function getServerSession(): Promise<{ user: User | null; error: Error | null }> {
+export async function GET() {
   try {
     const cookieStore = cookies()
     const supabase = createServerClient(
@@ -24,8 +24,13 @@ export async function getServerSession(): Promise<{ user: User | null; error: Er
     )
 
     const { data: { user }, error } = await supabase.auth.getUser()
-    return { user, error }
+    
+    if (error || !user) {
+      return NextResponse.json({ user: null, error: error?.message || 'No user' }, { status: 401 })
+    }
+
+    return NextResponse.json({ user, error: null })
   } catch (error: any) {
-    return { user: null, error }
+    return NextResponse.json({ user: null, error: error.message }, { status: 500 })
   }
 }
