@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const cookieStore = cookies()
+    let response = NextResponse.redirect(new URL('/', requestUrl.origin))
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,9 +35,11 @@ export async function GET(request: NextRequest) {
           },
           set(name: string, value: string, options: any) {
             cookieStore.set({ name, value, ...options })
+            response.cookies.set({ name, value, ...options })
           },
           remove(name: string, options: any) {
             cookieStore.set({ name, value: '', ...options })
+            response.cookies.set({ name, value: '', ...options })
           },
         },
       }
@@ -47,11 +51,12 @@ export async function GET(request: NextRequest) {
     if (exchangeError) {
       const redirectUrl = new URL('/login', requestUrl.origin)
       redirectUrl.searchParams.set('error', exchangeError.message)
-      return NextResponse.redirect(redirectUrl)
+      response = NextResponse.redirect(redirectUrl)
+      return response
     }
 
-    // Succès : rediriger vers la page d'accueil
-    return NextResponse.redirect(new URL('/', requestUrl.origin))
+    // Succès : rediriger vers la page d'accueil avec les cookies de session
+    return response
   } catch (error: any) {
     const redirectUrl = new URL('/login', requestUrl.origin)
     redirectUrl.searchParams.set('error', error.message || 'Une erreur est survenue')

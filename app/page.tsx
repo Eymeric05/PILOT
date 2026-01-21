@@ -111,7 +111,22 @@ export default function Home() {
           return
         }
 
-        const { data: { user }, error } = await supabase.auth.getUser()
+        let { data: { user }, error } = await supabase.auth.getUser()
+        
+        // Gérer AuthSessionMissingError avec un refresh de session
+        if (error && (error.message.includes('AuthSessionMissingError') || error.message.includes('session'))) {
+          try {
+            const { data: { session }, error: refreshError } = await supabase.auth.refreshSession()
+            if (!refreshError && session) {
+              // Réessayer après le refresh
+              const retry = await supabase.auth.getUser()
+              user = retry.data.user
+              error = retry.error
+            }
+          } catch (refreshErr) {
+            // Si le refresh échoue, continuer avec l'erreur originale
+          }
+        }
         
         if (error) {
           // Ne pas rediriger si c'est une erreur réseau pour éviter la boucle
@@ -121,16 +136,31 @@ export default function Home() {
             return
           }
           
-          // Rediriger seulement si c'est vraiment une erreur d'authentification
-          if (error.status === 401 || error.message.includes('JWT')) {
-            router.push("/login")
+          // Ne rediriger QUE si loading est terminé et que c'est vraiment une erreur d'authentification
+          if (isMounted) {
+            setLoading(false)
+            if (error.status === 401 || error.message.includes('JWT') || error.message.includes('session')) {
+              // Attendre un peu pour laisser le temps au middleware de mettre à jour les cookies
+              setTimeout(() => {
+                if (isMounted) {
+                  router.push("/login")
+                }
+              }, 100)
+            }
           }
-          setLoading(false)
           return
         }
 
         if (!user) {
-          router.push("/login")
+          if (isMounted) {
+            setLoading(false)
+            // Attendre un peu avant de rediriger
+            setTimeout(() => {
+              if (isMounted) {
+                router.push("/login")
+              }
+            }, 100)
+          }
           return
         }
 
@@ -148,7 +178,9 @@ export default function Home() {
           setConnectionError('Serveur Supabase injoignable')
         }
         
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
         // Ne pas rediriger en cas d'exception pour éviter la boucle
       }
     }
