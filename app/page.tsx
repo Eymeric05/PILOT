@@ -37,6 +37,7 @@ export default function Home() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [householdId, setHouseholdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isInitializing, setIsInitializing] = useState(true)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const headerRef = useRef<HTMLElement>(null)
   const fabRef = useRef<HTMLDivElement>(null)
@@ -107,9 +108,13 @@ export default function Home() {
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         
         if (!supabaseUrl || !supabaseKey) {
+          setIsInitializing(false)
           setLoading(false)
           return
         }
+
+        // Attendre un peu pour laisser le temps aux cookies SSR de se charger
+        await new Promise(resolve => setTimeout(resolve, 100))
 
         let { data: { user }, error } = await supabase.auth.getUser()
         
@@ -119,6 +124,7 @@ export default function Home() {
             const { data: { session }, error: refreshError } = await supabase.auth.refreshSession()
             if (!refreshError && session) {
               // Réessayer après le refresh
+              await new Promise(resolve => setTimeout(resolve, 200))
               const retry = await supabase.auth.getUser()
               user = retry.data.user
               error = retry.error
@@ -132,20 +138,22 @@ export default function Home() {
           // Ne pas rediriger si c'est une erreur réseau pour éviter la boucle
           if (error.message.includes('ERR_CONNECTION_RESET') || error.message.includes('Failed to fetch')) {
             setConnectionError('Serveur Supabase injoignable')
+            setIsInitializing(false)
             setLoading(false)
             return
           }
           
-          // Ne rediriger QUE si loading est terminé et que c'est vraiment une erreur d'authentification
+          // Ne rediriger QUE si isInitializing est false ET que c'est vraiment une erreur d'authentification
           if (isMounted) {
+            setIsInitializing(false)
             setLoading(false)
-            if (error.status === 401 || error.message.includes('JWT') || error.message.includes('session')) {
-              // Attendre un peu pour laisser le temps au middleware de mettre à jour les cookies
+            // Ne rediriger que si l'erreur persiste après l'initialisation
+            if (error.status === 401 || error.message.includes('JWT')) {
               setTimeout(() => {
-                if (isMounted) {
+                if (isMounted && !user) {
                   router.push("/login")
                 }
-              }, 100)
+              }, 1000)
             }
           }
           return
@@ -153,13 +161,14 @@ export default function Home() {
 
         if (!user) {
           if (isMounted) {
+            setIsInitializing(false)
             setLoading(false)
-            // Attendre un peu avant de rediriger
+            // Ne rediriger QUE après l'initialisation (délai pour laisser les cookies SSR se charger)
             setTimeout(() => {
               if (isMounted) {
                 router.push("/login")
               }
-            }, 100)
+            }, 1000)
           }
           return
         }
@@ -170,6 +179,7 @@ export default function Home() {
           setHouseholdId(hId)
           
           await Promise.all([loadExpenses(user.id, hId), loadCategories()])
+          setIsInitializing(false)
           setLoading(false)
         }
       } catch (error: any) {
@@ -179,6 +189,7 @@ export default function Home() {
         }
         
         if (isMounted) {
+          setIsInitializing(false)
           setLoading(false)
         }
         // Ne pas rediriger en cas d'exception pour éviter la boucle

@@ -26,6 +26,10 @@ function getSupabaseClient(): SupabaseClient {
   }
 
   // Utiliser createBrowserClient pour stocker le code verifier PKCE dans les cookies
+  // createBrowserClient configure automatiquement les cookies avec :
+  // - path: '/' (accessible sur toutes les pages)
+  // - sameSite: 'lax' (compatible avec les redirections OAuth)
+  // - secure: true en production (HTTPS uniquement)
   supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
   
   return supabaseClient
