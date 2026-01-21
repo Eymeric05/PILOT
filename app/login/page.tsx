@@ -19,6 +19,16 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
+    // Vérifier s'il y a une erreur dans l'URL (depuis le callback)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlError = urlParams.get('error')
+      if (urlError) {
+        setError(urlError)
+        // Nettoyer l'URL
+        window.history.replaceState({}, '', '/login')
+      }
+    }
     // Vérifier si l'utilisateur est déjà connecté (mais ne pas rediriger immédiatement)
     // pour éviter les conflits avec le callback OAuth
     const checkSession = async () => {
