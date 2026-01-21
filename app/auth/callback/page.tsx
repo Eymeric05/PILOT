@@ -22,12 +22,21 @@ export default function AuthCallback() {
         
         if (errorParam) {
           console.error('[AUTH CALLBACK] Erreur dans l\'URL:', errorParam, errorDescription)
-          setError(errorDescription || errorParam)
+          
+          // Traduire et améliorer les messages d'erreur courants
+          let errorMessage = errorDescription || errorParam
+          if (errorMessage.includes('Unable to exchange external code')) {
+            errorMessage = 'Erreur de configuration OAuth. Vérifiez que l\'URL de redirection dans Supabase correspond exactement à : ' + window.location.origin + '/auth/callback'
+          } else if (errorParam === 'server_error') {
+            errorMessage = 'Erreur serveur lors de l\'authentification. Vérifiez la configuration OAuth dans Supabase.'
+          }
+          
+          setError(errorMessage)
           timeoutId = setTimeout(() => {
             if (isMounted) {
               router.replace("/login")
             }
-          }, 3000)
+          }, 5000) // Plus de temps pour lire le message
           return
         }
 
@@ -131,13 +140,23 @@ export default function AuthCallback() {
   }, [router])
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center space-y-4">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="text-center space-y-4 max-w-md">
         {error ? (
           <>
-            <p className="text-destructive font-semibold">Erreur de connexion</p>
-            <p className="text-muted-foreground text-sm">{error}</p>
-            <p className="text-muted-foreground text-xs">Redirection en cours...</p>
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-6 space-y-3">
+              <p className="text-destructive font-semibold text-lg">Erreur de connexion</p>
+              <p className="text-muted-foreground text-sm break-words">{error}</p>
+              <div className="pt-3 border-t border-destructive/20">
+                <p className="text-muted-foreground text-xs font-medium mb-2">Vérifications à faire :</p>
+                <ul className="text-left text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>URL de redirection dans Supabase : <code className="bg-background px-1 rounded">{window.location.origin}/auth/callback</code></li>
+                  <li>Credentials Google OAuth corrects dans Supabase</li>
+                  <li>URL autorisée dans Google Cloud Console</li>
+                </ul>
+              </div>
+              <p className="text-muted-foreground text-xs pt-2">Redirection en cours...</p>
+            </div>
           </>
         ) : (
           <>
