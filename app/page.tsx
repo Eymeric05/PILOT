@@ -47,8 +47,6 @@ export default function Home() {
     try {
       const { data, error } = await supabase.from("categories").select("*")
       
-      console.log('[CATEGORIES] Résultat de la requête:', { data, error, count: data?.length || 0 })
-      
       if (error) throw error
 
       if (!data || data.length === 0) {
@@ -57,7 +55,6 @@ export default function Home() {
         const { data: inserted, error: insertError } = await supabase.from("categories").insert(defaultCategory).select()
         
         if (insertError) {
-          console.error("Erreur insertion catégorie par défaut:", insertError)
           // Créer une catégorie par défaut en mémoire si l'insertion échoue
           setCategories([{
             id: 'default',
@@ -82,7 +79,6 @@ export default function Home() {
         })))
       }
     } catch (err) {
-      console.error("Erreur catégories:", err)
       // En cas d'erreur, forcer une catégorie par défaut
       setCategories([{
         id: 'default',
@@ -98,7 +94,7 @@ export default function Home() {
       const userExpenses = await fetchExpenses(userId, hId)
       setExpenses(userExpenses)
     } catch (error) {
-      console.error("Error loading expenses:", error)
+      // Erreur silencieuse
     }
   }
 
@@ -111,33 +107,15 @@ export default function Home() {
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         
         if (!supabaseUrl || !supabaseKey) {
-          console.error('[AUTH ERROR] Variables d\'environnement manquantes:', {
-            hasUrl: !!supabaseUrl,
-            hasKey: !!supabaseKey,
-            url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'MISSING',
-          })
           setLoading(false)
           return
-        }
-
-        // Vérifier le protocole de l'URL
-        if (supabaseUrl && !supabaseUrl.startsWith('https://')) {
-          console.warn('[AUTH WARNING] URL Supabase n\'utilise pas HTTPS:', supabaseUrl.substring(0, 30))
         }
 
         const { data: { user }, error } = await supabase.auth.getUser()
         
         if (error) {
-          console.error('[AUTH ERROR] Erreur lors de la récupération de l\'utilisateur:', {
-            message: error.message,
-            status: error.status,
-            name: error.name,
-            url: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'UNKNOWN',
-          })
-          
           // Ne pas rediriger si c'est une erreur réseau pour éviter la boucle
           if (error.message.includes('ERR_CONNECTION_RESET') || error.message.includes('Failed to fetch')) {
-            console.error('[AUTH ERROR] Erreur réseau détectée - Arrêt de la boucle de redirection')
             setConnectionError('Serveur Supabase injoignable')
             setLoading(false)
             return
@@ -152,7 +130,6 @@ export default function Home() {
         }
 
         if (!user) {
-          console.log('[AUTH] Aucun utilisateur trouvé - Redirection vers /login')
           router.push("/login")
           return
         }
@@ -162,26 +139,10 @@ export default function Home() {
           const hId = user.user_metadata?.household_id || null
           setHouseholdId(hId)
           
-          // Debug: vérifier les métadonnées
-          console.log('[AUTH] Utilisateur connecté:', {
-            id: user.id,
-            email: user.email,
-            display_name: user.user_metadata?.display_name,
-            partner_name: user.user_metadata?.partner_name,
-            has_profile_picture: !!user.user_metadata?.profile_picture_url,
-            has_partner_picture: !!user.user_metadata?.partner_profile_picture_url,
-          })
-          
           await Promise.all([loadExpenses(user.id, hId), loadCategories()])
           setLoading(false)
         }
       } catch (error: any) {
-        console.error('[AUTH ERROR] Exception non gérée dans initApp:', {
-          message: error?.message,
-          stack: error?.stack,
-          name: error?.name,
-        })
-        
         // Afficher une bannière d'erreur si c'est une erreur de connexion
         if (error?.message?.includes('Failed to fetch') || error?.message?.includes('ERR_CONNECTION_RESET')) {
           setConnectionError('Serveur Supabase injoignable')
@@ -195,11 +156,8 @@ export default function Home() {
 
     // Écouter les changements d'authentification pour mettre à jour l'utilisateur
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[AUTH] Auth state change:', event, session?.user?.email || 'No user')
-      
       if (isMounted) {
         if (event === 'SIGNED_OUT' || !session?.user) {
-          console.log('[AUTH] Déconnexion détectée - Nettoyage et redirection')
           setUser(null)
           setLoading(false)
           
@@ -219,18 +177,13 @@ export default function Home() {
               // Recharger l'utilisateur pour obtenir les métadonnées mises à jour
               const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
               if (error) {
-                console.error('[AUTH ERROR] Erreur lors de la mise à jour de l\'utilisateur:', error.message)
                 return
               }
               if (updatedUser && isMounted) {
-                console.log('[AUTH] Utilisateur mis à jour avec métadonnées:', {
-                  display_name: updatedUser.user_metadata?.display_name,
-                  partner_name: updatedUser.user_metadata?.partner_name,
-                })
                 setUser(updatedUser)
               }
             } catch (error: any) {
-              console.error('[AUTH ERROR] Exception lors de la mise à jour:', error?.message)
+              // Erreur silencieuse
             }
           }
         }
@@ -243,14 +196,13 @@ export default function Home() {
         try {
           const { data: { user: updatedUser }, error } = await supabase.auth.getUser()
           if (error) {
-            console.error('[AUTH ERROR] Erreur lors de la récupération des métadonnées:', error.message)
             return
           }
           if (updatedUser && isMounted) {
             setUser(updatedUser)
           }
         } catch (error: any) {
-          console.error('[AUTH ERROR] Exception lors de la mise à jour des métadonnées:', error?.message)
+          // Erreur silencieuse
         }
       }
     }
@@ -328,7 +280,6 @@ export default function Home() {
       await loadExpenses(user.id, householdId)
       setDrawerOpen(false)
     } catch (error: any) {
-      console.error("Error adding expense:", error)
       alert(`Erreur lors de l'ajout de la dépense: ${error.message || "Une erreur est survenue"}`)
       throw error // Re-lancer l'erreur pour que le formulaire ne se reset pas
     }
