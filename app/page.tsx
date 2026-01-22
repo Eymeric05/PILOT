@@ -97,25 +97,22 @@ export default function Home() {
 
   useEffect(() => {
     let isMounted = true
+    
+    // Charger les catégories immédiatement sans vérification de session
+    loadCategories()
+
     const initApp = async () => {
       try {
-        // Utiliser getSession() au lieu de getUser() pour lire depuis les cookies mis à jour par le middleware
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const { data: { session } } = await supabase.auth.getSession()
         
-        if (sessionError || !session?.user) {
-          if (isMounted) {
-            setLoading(false)
-            router.push("/login")
-          }
-          return
-        }
-
-        if (isMounted && session.user) {
+        if (session?.user && isMounted) {
           setUser(session.user)
           const hId = session.user.user_metadata?.household_id || null
           setHouseholdId(hId)
-          
-          await Promise.all([loadExpenses(session.user.id, hId), loadCategories()])
+          await loadExpenses(session.user.id, hId)
+        }
+        
+        if (isMounted) {
           setLoading(false)
         }
       } catch (error: any) {
@@ -125,7 +122,6 @@ export default function Home() {
         
         if (isMounted) {
           setLoading(false)
-          router.push("/login")
         }
       }
     }
@@ -136,14 +132,8 @@ export default function Home() {
       if (isMounted) {
         if (event === 'SIGNED_OUT' || !session?.user) {
           setUser(null)
-          setLoading(false)
-          
-          if (typeof window !== 'undefined') {
-            localStorage.clear()
-            sessionStorage.clear()
-          }
-          
-          router.push("/login")
+          setHouseholdId(null)
+          setExpenses([])
           return
         }
         
@@ -152,6 +142,7 @@ export default function Home() {
             setUser(session.user)
             const hId = session.user.user_metadata?.household_id || null
             setHouseholdId(hId)
+            await loadExpenses(session.user.id, hId)
           }
         }
       }

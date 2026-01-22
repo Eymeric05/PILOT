@@ -9,27 +9,16 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      // Avec le flow implicite, Supabase détecte automatiquement les tokens dans l'URL
-      // On attend que la session soit établie
-      const { data: { session }, error } = await supabase.auth.getSession()
+      // Supabase détecte automatiquement les tokens dans l'URL
+      const { data: { session } } = await supabase.auth.getSession()
       
-      if (error) {
-        router.replace("/login?error=" + encodeURIComponent(error.message))
-        return
-      }
-
       if (session?.user) {
         router.replace("/")
       } else {
-        // Attendre un peu et réessayer
-        setTimeout(async () => {
-          const { data: { session: retrySession } } = await supabase.auth.getSession()
-          if (retrySession?.user) {
-            router.replace("/")
-          } else {
-            router.replace("/login?error=Session not found")
-          }
-        }, 1000)
+        // Attendre un peu pour que Supabase traite le callback
+        setTimeout(() => {
+          router.replace("/")
+        }, 500)
       }
     }
 

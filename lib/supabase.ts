@@ -1,19 +1,9 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 let supabaseClient: SupabaseClient | null = null
 
 function getSupabaseClient(): SupabaseClient {
-  // Ne créer le client que côté client (dans le navigateur)
-  if (typeof window === 'undefined') {
-    // Côté serveur lors du build, créer un client avec des valeurs par défaut
-    // pour éviter l'erreur de build, mais il ne sera pas utilisé
-    const { createClient } = require('@supabase/supabase-js')
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-    return createClient(url, key)
-  }
-
   if (supabaseClient) {
     return supabaseClient
   }
@@ -25,17 +15,15 @@ function getSupabaseClient(): SupabaseClient {
     throw new Error('Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
-  // Utiliser createBrowserClient avec flow implicite pour éviter les problèmes PKCE
-  // Le flow implicite permet de compléter le sign-in même si initié dans un autre environnement
-  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      flowType: 'implicit',
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
     },
   })
   
   return supabaseClient
 }
 
-// Export pour compatibilité avec le code existant
-// Le client sera créé uniquement quand il est utilisé côté client
 export const supabase = getSupabaseClient()
