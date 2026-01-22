@@ -46,7 +46,7 @@ export function ExpenseForm({
   // Sécurisation de la catégorie initiale
   const [categoryId, setCategoryId] = useState("")
   const [paidBy, setPaidBy] = useState<UserRole>(userId || "")
-  const [isShared, setIsShared] = useState(true)
+  const [isShared, setIsShared] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [expenseDate, setExpenseDate] = useState<string>(() => {
     const today = new Date()
@@ -67,6 +67,31 @@ export function ExpenseForm({
       setCategoryId("")
     }
   }, [categories, categoryId])
+
+  // Reset UI si la page redevient visible et qu'un chargement était bloqué
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isSubmitting) {
+        // Si on revient sur la page et qu'on est bloqué en soumission, reset après un délai
+        const timeout = setTimeout(() => {
+          setIsSubmitting(false)
+        }, 5000) // Reset après 5 secondes si toujours bloqué
+        
+        return () => clearTimeout(timeout)
+      }
+    }
+
+    let cleanup: (() => void) | undefined
+    const handler = () => {
+      cleanup = handleVisibilityChange()
+    }
+
+    document.addEventListener('visibilitychange', handler)
+    return () => {
+      document.removeEventListener('visibilitychange', handler)
+      if (cleanup) cleanup()
+    }
+  }, [isSubmitting])
 
 
   // Débounce pour récupérer le logo via Logo.dev
@@ -116,7 +141,7 @@ export function ExpenseForm({
       // Reset form immédiatement après succès
       setName("")
       setAmount("")
-      setIsShared(true)
+      setIsShared(false)
       setLogoUrl(null)
       setIsRecurring(false)
       setPaidBy(userId || "")
@@ -234,8 +259,8 @@ export function ExpenseForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="paidBy" className="text-sm font-medium tracking-tight">Payé par</Label>
-          <Select value={paidBy} onValueChange={(value) => setPaidBy(value as UserRole)} disabled={isSubmitting}>
-            <SelectTrigger id="paidBy" className="h-10">
+          <Select value={paidBy} onValueChange={(value) => setPaidBy(value as UserRole)} disabled={isSubmitting || isShared}>
+            <SelectTrigger id="paidBy" className="h-10" disabled={isShared}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

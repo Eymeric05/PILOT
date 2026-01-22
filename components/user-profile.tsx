@@ -76,6 +76,25 @@ export function UserProfile({ children }: UserProfileProps) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Reset UI si la page redevient visible et qu'un chargement était bloqué
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Reset les états bloqués après un délai si toujours actifs
+        setTimeout(() => {
+          setSavingName(prev => prev ? false : prev)
+          setSavingPartnerName(prev => prev ? false : prev)
+          setUploadingPicture(prev => prev ? null : prev)
+        }, 5000) // Reset après 5 secondes si toujours bloqué
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
+
   const handleSignOut = async () => {
     try {
       setDrawerOpen(false)

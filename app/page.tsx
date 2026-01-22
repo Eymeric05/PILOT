@@ -189,14 +189,46 @@ export default function Home() {
       }
     }
 
+    // Gestion du focus : vérifier la session quand l'utilisateur revient sur l'onglet
+    const handleWindowFocus = async () => {
+      if (isMounted && !loading) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session?.user) {
+            router.replace("/login")
+          } else if (session.user.id !== user?.id) {
+            // Session a changé, mettre à jour l'utilisateur
+            setUser(session.user)
+            const hId = session.user.user_metadata?.household_id || null
+            setHouseholdId(hId)
+            await loadExpenses(session.user.id, hId)
+          }
+        } catch (error) {
+          // Erreur silencieuse, ne pas bloquer l'UI
+        }
+      }
+    }
+
+    // Gestion de la visibilité : reset les états bloqués quand la page redevient visible
+    const handleVisibilityChange = () => {
+      if (isMounted && document.visibilityState === 'visible') {
+        // Forcer un refresh de session au retour de visibilité
+        handleWindowFocus()
+      }
+    }
+
     window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+    window.addEventListener('focus', handleWindowFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       isMounted = false
       subscription.unsubscribe()
       window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+      window.removeEventListener('focus', handleWindowFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [router])
+  }, [router, loading, user])
 
   useEffect(() => {
     if (!loading) {
@@ -484,7 +516,7 @@ export default function Home() {
               </motion.div>
             </motion.div>
           </DrawerTrigger>
-          <DrawerContent>
+          <DrawerContent className="max-h-[90vh] overflow-y-auto">
             <DrawerHeader className="text-left pb-2 sm:pb-3">
               <DrawerTitle>Nouvelle dépense</DrawerTitle>
               <DrawerDescription>
