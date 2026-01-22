@@ -45,9 +45,11 @@ export default function Home() {
 
   const currentUser: UserRole = user?.id || ""
 
-  // Charger les dépenses quand l'utilisateur est disponible
+  // Charger les dépenses une seule fois quand l'utilisateur est disponible
+  const expensesLoadedRef = useRef(false)
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !expensesLoadedRef.current) {
+      expensesLoadedRef.current = true
       loadExpenses()
     }
   }, [user?.id, loadExpenses])

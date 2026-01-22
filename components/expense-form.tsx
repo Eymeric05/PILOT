@@ -56,9 +56,9 @@ export function ExpenseForm({
   const [description, setDescription] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Filtrer les catégories avec id='default' qui ne sont pas des UUID valides
+  // Filtrer les catégories avec id='default' ou vides pour éviter les crashes
   const validCategories = useMemo(() => 
-    categories.filter(cat => cat.id !== 'default' && cat.id !== ''),
+    categories.filter(cat => cat && cat.id && cat.id !== 'default' && cat.id !== ''),
     [categories]
   )
   
@@ -207,11 +207,13 @@ export function ExpenseForm({
               <SelectValue placeholder={validCategories.length === 0 ? "Aucune catégorie disponible" : "Choisir une catégorie"} />
             </SelectTrigger>
             <SelectContent>
-              {validCategories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.icon} {category.name}
-                </SelectItem>
-              ))}
+              {validCategories
+                .filter(category => category.id && category.id !== '')
+                .map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.icon} {category.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -249,7 +251,7 @@ export function ExpenseForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={userId || "user"}>Moi</SelectItem>
+              <SelectItem value={userId && userId !== '' ? userId : "user"}>Moi</SelectItem>
               <SelectItem value="partner">Partenaire</SelectItem>
             </SelectContent>
           </Select>
