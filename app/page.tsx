@@ -169,23 +169,29 @@ export default function Home() {
           return
         }
         
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           if (session?.user) {
             setUser(session.user)
             const hId = session.user.user_metadata?.household_id || null
             setHouseholdId(hId)
-            await loadExpenses(session.user.id, hId)
+            // Ne recharger les dépenses que si vraiment nécessaire (pas sur TOKEN_REFRESHED)
+            if (event === 'SIGNED_IN') {
+              await loadExpenses(session.user.id, hId)
+            }
+          }
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Juste mettre à jour l'utilisateur sans recharger les dépenses
+          if (session?.user) {
+            setUser(session.user)
           }
         }
       }
     })
 
     const handleUserMetadataUpdate = async () => {
-      if (isMounted) {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          setUser(session.user)
-        }
+      if (isMounted && user) {
+        // Utiliser onAuthStateChange qui est déjà configuré plutôt qu'un appel getSession supplémentaire
+        // L'événement USER_UPDATED sera déjà géré par onAuthStateChange
       }
     }
 
@@ -247,25 +253,16 @@ export default function Home() {
   }, [filteredExpenses])
 
   const handleAddExpense = async (expenseData: any) => {
-    // Vérifier la session avant d'ajouter
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session?.user) {
+    // Vérifier que l'utilisateur est connecté
+    if (!user) {
       const errorMsg = "Vous devez être connecté pour ajouter une dépense"
       alert(errorMsg)
       throw new Error(errorMsg)
     }
 
-    if (!user) {
-      // Mettre à jour l'utilisateur depuis la session
-      setUser(session.user)
-      const hId = session.user.user_metadata?.household_id || null
-      setHouseholdId(hId)
-    }
-
     try {
-      const userId = user?.id || session.user.id
-      const hId = householdId || session.user.user_metadata?.household_id || null
+      const userId = user.id
+      const hId = householdId || user.user_metadata?.household_id || null
       
       // Optimistic UI : ajouter la dépense localement immédiatement
       const newExpense: Expense = {
@@ -284,16 +281,38 @@ export default function Home() {
       setExpenses(prev => [newExpense, ...prev])
       setDrawerOpen(false)
       
-      // Puis créer en base de données
-      await createExpense(
+      // Créer en base de données - la fonction retourne déjà les données créées
+      const createdExpenses = await createExpense(
         expenseData,
         userId,
         hId,
         expenseData.isRecurring
       )
       
-      // Recharger pour avoir l'ID réel
-      await loadExpenses(userId, hId)
+      // Mettre à jour l'état local avec les vraies données (ID réel) au lieu de recharger toutes les dépenses
+      if (createdExpenses && createdExpenses.length > 0) {
+        setExpenses(prev => {
+          // Retirer les dépenses temporaires
+          const withoutTemp = prev.filter(e => !e.id.startsWith('temp-'))
+          // Ajouter les nouvelles dépenses créées avec leurs vrais IDs
+          const newExpenses: Expense[] = createdExpenses.map((exp: any) => ({
+            id: exp.id,
+            name: exp.name,
+            amount: exp.amount,
+            categoryId: exp.category_id,
+            paidBy: exp.paid_by,
+            isShared: exp.is_shared,
+            logoUrl: exp.logo_url,
+            description: exp.description || null,
+            expenseDate: new Date(exp.expense_date),
+            createdAt: new Date(exp.created_at),
+            updatedAt: new Date(exp.updated_at || exp.created_at),
+            user_id: exp.user_id,
+            household_id: exp.household_id,
+          }))
+          return [...newExpenses, ...withoutTemp]
+        })
+      }
     } catch (error: any) {
       // En cas d'erreur, retirer la dépense optimiste
       setExpenses(prev => prev.filter(e => !e.id.startsWith('temp-')))

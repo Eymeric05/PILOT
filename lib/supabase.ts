@@ -20,6 +20,16 @@ function getSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      flowType: 'pkce',
+    },
+    global: {
+      headers: {
+        'x-client-info': 'planning-depenses',
+      },
+    },
+    db: {
+      schema: 'public',
     },
   })
   

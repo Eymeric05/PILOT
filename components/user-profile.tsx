@@ -38,7 +38,8 @@ export function UserProfile({ children }: UserProfileProps) {
   const router = useRouter()
 
   useEffect(() => {
-    const checkUser = async () => {
+    // Un seul appel getSession au démarrage, puis on écoute les événements personnalisés
+    const initUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user) {
@@ -47,8 +48,6 @@ export function UserProfile({ children }: UserProfileProps) {
           setPartnerName(session.user.user_metadata?.partner_name || "Personnel B")
           setProfilePicture(session.user.user_metadata?.profile_picture_url || null)
           setPartnerProfilePicture(session.user.user_metadata?.partner_profile_picture_url || null)
-        } else {
-          setUser(null)
         }
       } catch (error) {
         setUser(null)
@@ -57,23 +56,25 @@ export function UserProfile({ children }: UserProfileProps) {
       }
     }
 
-    checkUser()
+    initUser()
 
-    // Écouter les changements d'authentification
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    // Utiliser l'événement personnalisé plutôt qu'un listener onAuthStateChange séparé (évite les doublons)
+    const handleUserMetadataUpdate = async () => {
+      // Récupérer la session mise à jour après les modifications
+      const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
+        setUser(session.user)
         setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
         setPartnerName(session.user.user_metadata?.partner_name || "Personnel B")
         setProfilePicture(session.user.user_metadata?.profile_picture_url || null)
         setPartnerProfilePicture(session.user.user_metadata?.partner_profile_picture_url || null)
       }
-      // Ne pas rediriger automatiquement ici pour éviter les conflits avec la déconnexion
-    })
+    }
 
-    return () => subscription.unsubscribe()
+    window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+    return () => {
+      window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+    }
   }, [])
 
   const handleSignOut = async () => {
