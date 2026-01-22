@@ -43,8 +43,8 @@ export function ExpenseForm({
 }: ExpenseFormProps) {
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
-  // Sécurisation de la catégorie initiale
-  const [categoryId, setCategoryId] = useState("")
+  // Sécurisation de la catégorie initiale - undefined au lieu de chaîne vide
+  const [categoryId, setCategoryId] = useState<string>("")
   const [paidBy, setPaidBy] = useState<UserRole>(userId || "")
   const [isShared, setIsShared] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
@@ -61,12 +61,17 @@ export function ExpenseForm({
   const validCategories = categories.filter(cat => cat.id !== 'default' && cat.id !== '')
   
   useEffect(() => {
-    if (validCategories.length > 0 && !categoryId) {
-      setCategoryId(validCategories[0].id)
-    } else if (validCategories.length === 0 && categoryId) {
+    if (validCategories.length > 0) {
+      // Si pas de catégorie sélectionnée ou si la catégorie sélectionnée n'est plus valide, sélectionner la première
+      const currentCategoryValid = categoryId && categoryId !== '' && validCategories.find(cat => cat.id === categoryId)
+      if (!currentCategoryValid) {
+        setCategoryId(validCategories[0].id)
+      }
+    } else if (validCategories.length === 0) {
+      // Réinitialiser si plus de catégories valides
       setCategoryId("")
     }
-  }, [categories, categoryId])
+  }, [categories, categoryId, validCategories])
 
 
   // Débounce pour récupérer le logo via Logo.dev
@@ -186,7 +191,11 @@ export function ExpenseForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="category" className="text-sm font-medium tracking-tight">Catégorie</Label>
-          <Select value={categoryId || undefined} onValueChange={setCategoryId} disabled={isSubmitting || validCategories.length === 0}>
+          <Select 
+            value={categoryId || undefined} 
+            onValueChange={(value) => setCategoryId(value)} 
+            disabled={isSubmitting || validCategories.length === 0}
+          >
             <SelectTrigger id="category" className="h-10">
               <SelectValue placeholder="Choisir une catégorie" />
             </SelectTrigger>
