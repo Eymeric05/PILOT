@@ -50,7 +50,7 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
         width={64}
         height={64}
         unoptimized
-        className="object-contain p-3"
+        className="w-full h-full object-cover"
         onError={() => useFallback ? setUseInitial(true) : setUseFallback(true)}
       />
     </motion.div>

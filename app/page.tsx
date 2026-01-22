@@ -115,8 +115,7 @@ export default function Home() {
         
         if (!session?.user) {
           if (isMounted) {
-            setLoading(false)
-            router.push("/login")
+            router.replace("/login")
           }
           return
         }
@@ -131,11 +130,13 @@ export default function Home() {
       } catch (error: any) {
         if (error?.message?.includes('Failed to fetch') || error?.message?.includes('ERR_CONNECTION_RESET')) {
           setConnectionError('Serveur Supabase injoignable')
-        }
-        
-        if (isMounted) {
-          setLoading(false)
-          router.push("/login")
+          if (isMounted) {
+            setLoading(false)
+          }
+        } else {
+          if (isMounted) {
+            router.replace("/login")
+          }
         }
       }
     }
@@ -263,7 +264,7 @@ export default function Home() {
     }
   }
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background gradient-mesh">
         <motion.div
@@ -280,6 +281,10 @@ export default function Home() {
         </motion.div>
       </div>
     )
+  }
+
+  if (!user) {
+    return null
   }
 
   return (
