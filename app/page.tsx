@@ -484,7 +484,7 @@ export default function Home() {
               </motion.div>
             </motion.div>
           </DrawerTrigger>
-          <DrawerContent className="max-h-[90vh] overflow-y-auto">
+          <DrawerContent className="max-h-[85vh] overflow-y-auto">
             <DrawerHeader className="text-left pb-2 sm:pb-3">
               <DrawerTitle>Nouvelle dépense</DrawerTitle>
               <DrawerDescription>
