@@ -17,11 +17,11 @@ import { MonthSelector } from "@/components/month-selector"
 import { HorizonSplit, FilterZone } from "@/components/horizon-split"
 import { UserProfile } from "@/components/user-profile"
 import { filterExpensesByMonth } from "@/lib/expense-utils"
-import { fetchExpenses, createExpense, deleteExpense } from "@/lib/expense-db"
-import { supabase } from "@/lib/supabase"
-import { Expense, UserRole, Category } from "@/types"
+import { useAuth } from "@/lib/hooks/use-auth"
+import { useCategories } from "@/lib/hooks/use-categories"
+import { useExpenses } from "@/lib/hooks/use-expenses"
+import { Expense, UserRole } from "@/types"
 import { Plus, Sparkles } from "lucide-react"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { DarkModeToggle } from "@/components/dark-mode-toggle"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -30,186 +30,44 @@ import gsap from "gsap"
 export default function Home() {
   const router = useRouter()
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterZone>(null)
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [householdId, setHouseholdId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const headerRef = useRef<HTMLElement>(null)
   const fabRef = useRef<HTMLDivElement>(null)
-  const categoriesLoadedRef = useRef(false)
+
+  const { user, loading: authLoading, householdId, setUser } = useAuth()
+  const { categories, loading: categoriesLoading } = useCategories()
+  const { expenses, loading: expensesLoading, loadExpenses, addExpense, removeExpense } = useExpenses(
+    user?.id || null,
+    householdId
+  )
 
   const currentUser: UserRole = user?.id || ""
 
-  const loadCategories = async () => {
-    // Éviter les appels multiples
-    if (categoriesLoadedRef.current) return
-    categoriesLoadedRef.current = true
-    try {
-      const { data, error } = await supabase.from("categories").select("*")
-      
-      if (error) {
-        setCategories([{
-          id: 'default',
-          name: 'Divers',
-          icon: '📦',
-          createdAt: new Date()
-        }])
-        return
-      }
-
-      if (!data || data.length === 0) {
-        const defaultCategory = { name: "Divers", icon: "📦" }
-        const { data: inserted, error: insertError } = await supabase.from("categories").insert(defaultCategory).select()
-        
-        if (insertError) {
-          setCategories([{
-            id: 'default',
-            name: 'Divers',
-            icon: '📦',
-            createdAt: new Date()
-          }])
-        } else if (inserted && inserted.length > 0) {
-          setCategories(inserted.map(c => ({
-            id: c.id,
-            name: c.name,
-            icon: c.icon,
-            createdAt: new Date(c.created_at)
-          })))
-        }
-      } else {
-        setCategories(data.map(c => ({
-          id: c.id,
-          name: c.name,
-          icon: c.icon,
-          createdAt: new Date(c.created_at)
-        })))
-      }
-    } catch (err) {
-      setCategories([{
-        id: 'default',
-        name: 'Divers',
-        icon: '📦',
-        createdAt: new Date()
-      }])
-    }
-  }
-
-  const loadExpenses = async (userId: string, hId: string | null) => {
-    try {
-      const userExpenses = await fetchExpenses(userId, hId)
-      setExpenses(userExpenses)
-    } catch (error) {
-      // Erreur silencieuse
-    }
-  }
-
+  // Charger les dépenses quand l'utilisateur est disponible
   useEffect(() => {
-    let isMounted = true
-    let timeoutId: NodeJS.Timeout | null = null
-    
-    // Charger les catégories immédiatement sans vérification de session
-    loadCategories()
-
-    // Timeout de sécurité : forcer la redirection après 1.5 secondes si toujours en chargement
-    timeoutId = setTimeout(() => {
-      if (isMounted && loading && !user) {
-        setLoading(false)
-        router.replace("/login")
-      }
-    }, 1500)
-
-    const initApp = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (!session?.user) {
-          if (isMounted) {
-            if (timeoutId) clearTimeout(timeoutId)
-            setLoading(false)
-            router.replace("/login")
-          }
-          return
-        }
-        
-        if (isMounted) {
-          if (timeoutId) clearTimeout(timeoutId)
-          setUser(session.user)
-          const hId = session.user.user_metadata?.household_id || null
-          setHouseholdId(hId)
-          await loadExpenses(session.user.id, hId)
-          setLoading(false)
-        }
-      } catch (error: any) {
-        if (isMounted) {
-          if (timeoutId) clearTimeout(timeoutId)
-        }
-        if (error?.message?.includes('Failed to fetch') || error?.message?.includes('ERR_CONNECTION_RESET')) {
-          setConnectionError('Serveur Supabase injoignable')
-          if (isMounted) {
-            setLoading(false)
-          }
-        } else {
-          if (isMounted) {
-            setLoading(false)
-            router.replace("/login")
-          }
-        }
-      }
+    if (user?.id) {
+      loadExpenses()
     }
-    initApp()
+  }, [user?.id, loadExpenses])
 
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (isMounted) {
-        if (event === 'SIGNED_OUT' || !session?.user) {
-          setUser(null)
-          setHouseholdId(null)
-          setExpenses([])
-          router.push("/login")
-          return
-        }
-        
-        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          if (session?.user) {
-            setUser(session.user)
-            const hId = session.user.user_metadata?.household_id || null
-            setHouseholdId(hId)
-            // Ne recharger les dépenses que si vraiment nécessaire (pas sur TOKEN_REFRESHED)
-            if (event === 'SIGNED_IN') {
-              await loadExpenses(session.user.id, hId)
-            }
-          }
-        } else if (event === 'TOKEN_REFRESHED') {
-          // Juste mettre à jour l'utilisateur sans recharger les dépenses
-          if (session?.user) {
-            setUser(session.user)
-          }
-        }
-      }
-    })
-
-    const handleUserMetadataUpdate = async () => {
-      if (isMounted && user) {
-        // Utiliser onAuthStateChange qui est déjà configuré plutôt qu'un appel getSession supplémentaire
-        // L'événement USER_UPDATED sera déjà géré par onAuthStateChange
-      }
-    }
-
-    window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
-
-    return () => {
-      isMounted = false
-      subscription.unsubscribe()
-      window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
-    }
-  }, [router])
-
+  // Gérer les erreurs de connexion
   useEffect(() => {
-    if (!loading) {
+    const handleError = (event: Event) => {
+      const errorEvent = event as CustomEvent
+      if (errorEvent.detail?.includes('Failed to fetch') || errorEvent.detail?.includes('ERR_CONNECTION_RESET')) {
+        setConnectionError('Serveur Supabase injoignable')
+      }
+    }
+
+    window.addEventListener('connectionError', handleError as EventListener)
+    return () => window.removeEventListener('connectionError', handleError as EventListener)
+  }, [])
+
+  // Animations GSAP
+  useEffect(() => {
+    if (!authLoading) {
       if (headerRef.current) {
         gsap.fromTo(
           headerRef.current,
@@ -232,8 +90,9 @@ export default function Home() {
         )
       }
     }
-  }, [loading])
+  }, [authLoading])
 
+  // Calculs memoïsés
   const monthlyExpenses = useMemo(() => {
     return filterExpensesByMonth(expenses, currentDate.getFullYear(), currentDate.getMonth())
   }, [expenses, currentDate])
@@ -256,8 +115,8 @@ export default function Home() {
     return [...filteredExpenses].sort((a, b) => new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime())
   }, [filteredExpenses])
 
+  // Handlers
   const handleAddExpense = async (expenseData: any) => {
-    // Vérifier que l'utilisateur est connecté
     if (!user) {
       const errorMsg = "Vous devez être connecté pour ajouter une dépense"
       alert(errorMsg)
@@ -265,74 +124,34 @@ export default function Home() {
     }
 
     try {
-      const userId = user.id
-      const hId = householdId || user.user_metadata?.household_id || null
-      
-      // Optimistic UI : ajouter la dépense localement immédiatement
-      const newExpense: Expense = {
-        id: `temp-${Date.now()}`,
-        name: expenseData.name,
-        amount: expenseData.amount,
-        categoryId: expenseData.categoryId,
-        paidBy: expenseData.paidBy,
-        isShared: expenseData.isShared,
-        logoUrl: expenseData.logoUrl,
-        description: expenseData.description,
-        expenseDate: expenseData.expenseDate,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-      setExpenses(prev => [newExpense, ...prev])
+      await addExpense(expenseData, expenseData.isRecurring)
       setDrawerOpen(false)
-      
-      // Créer en base de données - la fonction retourne déjà les données créées
-      const createdExpenses = await createExpense(
-        expenseData,
-        userId,
-        hId,
-        expenseData.isRecurring
-      )
-      
-      // Mettre à jour l'état local avec les vraies données (ID réel) au lieu de recharger toutes les dépenses
-      if (createdExpenses && createdExpenses.length > 0) {
-        setExpenses(prev => {
-          // Retirer les dépenses temporaires
-          const withoutTemp = prev.filter(e => !e.id.startsWith('temp-'))
-          // Ajouter les nouvelles dépenses créées avec leurs vrais IDs
-          const newExpenses: Expense[] = createdExpenses.map((exp: any) => ({
-            id: exp.id,
-            name: exp.name,
-            amount: exp.amount,
-            categoryId: exp.category_id,
-            paidBy: exp.paid_by,
-            isShared: exp.is_shared,
-            logoUrl: exp.logo_url,
-            description: exp.description || null,
-            expenseDate: new Date(exp.expense_date),
-            createdAt: new Date(exp.created_at),
-            updatedAt: new Date(exp.updated_at || exp.created_at),
-            user_id: exp.user_id,
-            household_id: exp.household_id,
-          }))
-          return [...newExpenses, ...withoutTemp]
-        })
-      }
     } catch (error: any) {
-      // En cas d'erreur, retirer la dépense optimiste
-      setExpenses(prev => prev.filter(e => !e.id.startsWith('temp-')))
       const errorMsg = error.message || "Une erreur est survenue lors de l'ajout de la dépense"
       alert(`Erreur: ${errorMsg}`)
       throw error
     }
   }
 
-  // Si pas d'utilisateur après le chargement, ne rien afficher (redirection en cours)
-  if (!user && !loading) {
-    return null
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      await removeExpense(id)
+    } catch (error: any) {
+      alert(`Erreur lors de la suppression: ${error.message || "Une erreur est survenue"}`)
+    }
   }
 
-  // Afficher le spinner seulement si on charge ET qu'on a pas encore vérifié l'utilisateur
-  if (loading) {
+  // Gérer les mises à jour de l'utilisateur
+  useEffect(() => {
+    const handleUserMetadataUpdate = () => {
+      // L'événement USER_UPDATED sera géré par useAuth
+    }
+    window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+    return () => window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+  }, [])
+
+  // Loading state
+  if (authLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background gradient-mesh">
         <motion.div
@@ -351,7 +170,6 @@ export default function Home() {
     )
   }
 
-  // Si pas d'utilisateur, ne rien afficher (redirection en cours)
   if (!user) {
     return null
   }
@@ -452,20 +270,7 @@ export default function Home() {
             categories={categories}
             currentUser={currentUser}
             activeFilter={activeFilter}
-            onDelete={async (id: string) => {
-              // Optimistic UI : retirer immédiatement de la liste
-              setExpenses(prev => prev.filter(e => e.id !== id))
-              
-              try {
-                await deleteExpense(id)
-              } catch (error: any) {
-                // En cas d'erreur, recharger les dépenses pour restaurer l'état
-                if (user) {
-                  await loadExpenses(user.id, householdId)
-                }
-                alert(`Erreur lors de la suppression: ${error.message || "Une erreur est survenue"}`)
-              }
-            }}
+            onDelete={handleDeleteExpense}
           />
         </motion.div>
 

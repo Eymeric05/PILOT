@@ -25,34 +25,15 @@ export default function LoginPage() {
       const urlError = urlParams.get('error')
       if (urlError) {
         setError(urlError)
-        // Nettoyer l'URL
         window.history.replaceState({}, '', '/login')
       }
     }
-    // Vérifier si l'utilisateur est déjà connecté (mais ne pas rediriger immédiatement)
-    // pour éviter les conflits avec le callback OAuth
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        // Attendre un peu pour s'assurer que le callback est terminé
-        setTimeout(() => {
-          router.replace("/")
-        }, 500)
-      }
-    }
-    
-    checkSession()
 
-    // Écouter les changements d'authentification
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    // Un seul listener pour éviter les requêtes multiples
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Rediriger seulement si l'utilisateur est vraiment connecté
-      // et attendre un peu pour éviter les conflits avec le callback
-      if (event === 'SIGNED_IN' && session?.user) {
-        setTimeout(() => {
-          router.replace("/")
-        }, 300)
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+        router.replace("/")
       }
     })
 

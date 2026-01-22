@@ -1,28 +1,59 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 export default function AuthCallback() {
   const router = useRouter()
+  const handledRef = useRef(false)
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      // Attendre que Supabase traite le callback OAuth
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (error || !session?.user) {
-        router.replace("/login?error=Connexion échouée")
-        return
+    if (handledRef.current) return
+    handledRef.current = true
+
+    let redirectDone = false
+
+    const redirect = (path: string) => {
+      if (!redirectDone) {
+        redirectDone = true
+        router.replace(path)
       }
-      
-      router.replace("/")
     }
 
-    handleAuthCallback()
+    // Utiliser onAuthStateChange pour détecter la connexion
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        subscription.unsubscribe()
+        redirect("/")
+      }
+    })
+
+    // Fallback : vérifier la session après un court délai
+    const checkSession = async () => {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        subscription.unsubscribe()
+        redirect("/")
+      } else {
+        subscription.unsubscribe()
+        redirect("/login?error=Connexion échouée")
+      }
+    }
+
+    checkSession()
+
+    // Timeout de sécurité
+    const timeout = setTimeout(() => {
+      subscription.unsubscribe()
+      redirect("/login?error=Timeout de connexion")
+    }, 3000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [router])
 
   return (
