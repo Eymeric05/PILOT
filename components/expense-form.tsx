@@ -64,17 +64,26 @@ export function ExpenseForm({
   
   // Synchroniser le categoryId quand les catégories chargent
   useEffect(() => {
-    if (validCategories.length > 0 && (!categoryId || categoryId === '')) {
-      // Sélectionner automatiquement la première catégorie si aucune n'est sélectionnée
-      setCategoryId(validCategories[0].id)
-    } else if (validCategories.length > 0 && categoryId) {
-      // Vérifier que la catégorie sélectionnée est toujours valide
-      const currentCategoryValid = validCategories.some(cat => cat.id === categoryId)
-      if (!currentCategoryValid) {
-        setCategoryId(validCategories[0].id)
+    if (validCategories.length > 0) {
+      const firstValidId = validCategories.find(cat => cat && cat.id && cat.id !== '' && cat.id !== 'default')?.id
+      
+      if (!categoryId || categoryId === '' || categoryId === 'default') {
+        // Sélectionner automatiquement la première catégorie valide si aucune n'est sélectionnée
+        if (firstValidId) {
+          setCategoryId(firstValidId)
+        }
+      } else {
+        // Vérifier que la catégorie sélectionnée est toujours valide
+        const currentCategoryValid = validCategories.some(cat => cat && cat.id === categoryId && cat.id !== '' && cat.id !== 'default')
+        if (!currentCategoryValid && firstValidId) {
+          setCategoryId(firstValidId)
+        }
       }
+    } else if (categoryId && categoryId !== '') {
+      // Réinitialiser si plus de catégories valides
+      setCategoryId("")
     }
-  }, [validCategories])
+  }, [validCategories, categoryId])
 
 
   // Débounce pour récupérer le logo via Logo.dev
@@ -133,7 +142,12 @@ export function ExpenseForm({
         return today.toISOString().split("T")[0]
       })
       if (validCategories.length > 0) {
-        setCategoryId(validCategories[0].id)
+        const firstValidId = validCategories.find(cat => cat && cat.id && cat.id !== '' && cat.id !== 'default')?.id
+        if (firstValidId) {
+          setCategoryId(firstValidId)
+        } else {
+          setCategoryId("")
+        }
       } else {
         setCategoryId("")
       }
@@ -195,9 +209,9 @@ export function ExpenseForm({
         <div className="space-y-1.5">
           <Label htmlFor="category" className="text-sm font-medium tracking-tight">Catégorie</Label>
           <Select 
-            value={categoryId || undefined} 
+            value={categoryId && categoryId !== '' ? categoryId : undefined} 
             onValueChange={(value) => {
-              if (value) {
+              if (value && value !== '') {
                 setCategoryId(value)
               }
             }} 
@@ -207,13 +221,26 @@ export function ExpenseForm({
               <SelectValue placeholder={validCategories.length === 0 ? "Aucune catégorie disponible" : "Choisir une catégorie"} />
             </SelectTrigger>
             <SelectContent>
-              {validCategories
-                .filter(category => category.id && category.id !== '')
-                .map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.icon} {category.name}
-                  </SelectItem>
-                ))}
+              {validCategories.length === 0 || !validCategories.some(cat => cat && cat.id && cat.id !== '' && cat.id !== 'default') ? (
+                <SelectItem value="none" disabled>
+                  Aucune catégorie disponible
+                </SelectItem>
+              ) : (
+                validCategories
+                  .filter(category => category && category.id && category.id !== '' && category.id !== 'default')
+                  .map((category) => {
+                    // Triple vérification avant le rendu
+                    if (!category || !category.id || category.id === '' || category.id === 'default') {
+                      return null
+                    }
+                    return (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.icon} {category.name}
+                      </SelectItem>
+                    )
+                  })
+                  .filter(Boolean)
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -246,7 +273,15 @@ export function ExpenseForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="paidBy" className="text-sm font-medium tracking-tight">Payé par</Label>
-          <Select value={paidBy} onValueChange={(value) => setPaidBy(value as UserRole)} disabled={isSubmitting || isShared}>
+          <Select 
+            value={paidBy && paidBy !== '' ? paidBy : (userId && userId !== '' ? userId : "user")} 
+            onValueChange={(value) => {
+              if (value && value !== '') {
+                setPaidBy(value as UserRole)
+              }
+            }} 
+            disabled={isSubmitting || isShared}
+          >
             <SelectTrigger id="paidBy" className="h-10" disabled={isShared}>
               <SelectValue />
             </SelectTrigger>

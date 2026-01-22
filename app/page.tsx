@@ -33,6 +33,7 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterZone>(null)
   const [connectionError, setConnectionError] = useState<string | null>(null)
+  const [networkError, setNetworkError] = useState<string | null>(null)
   const headerRef = useRef<HTMLElement>(null)
   const fabRef = useRef<HTMLDivElement>(null)
 
@@ -54,11 +55,22 @@ export default function Home() {
     }
   }, [user?.id, loadExpenses])
 
-  // Gérer les erreurs de connexion
+  // Gérer les erreurs de connexion (notification discrète pour erreurs réseau)
   useEffect(() => {
     const handleError = (event: Event) => {
       const errorEvent = event as CustomEvent
-      if (errorEvent.detail?.includes('Failed to fetch') || errorEvent.detail?.includes('ERR_CONNECTION_RESET')) {
+      const errorMsg = errorEvent.detail
+      
+      // Erreurs réseau (ERR_HTTP2, etc.) - notification discrète
+      if (errorMsg?.includes('ERR_HTTP2') || 
+          errorMsg?.includes('ERR_CONNECTION_RESET') || 
+          errorMsg?.includes('ERR_CONNECTION_CLOSED') ||
+          errorMsg?.includes('Failed to fetch')) {
+        setNetworkError('Problème de connexion - vos données sont conservées')
+        // Auto-dismiss après 5 secondes
+        setTimeout(() => setNetworkError(null), 5000)
+      } else if (errorMsg?.includes('Failed to fetch') || errorMsg?.includes('ERR_CONNECTION_RESET')) {
+        // Erreurs critiques
         setConnectionError('Serveur Supabase injoignable')
       }
     }
@@ -248,6 +260,17 @@ export default function Home() {
                 </svg>
               </button>
             </div>
+          </motion.div>
+        )}
+
+        {networkError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-4 p-3 rounded-xl glass border-2 border-yellow-500/30 bg-yellow-500/10"
+          >
+            <p className="text-xs font-medium text-yellow-600 dark:text-yellow-400">{networkError}</p>
           </motion.div>
         )}
 

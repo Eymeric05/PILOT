@@ -15,9 +15,28 @@ export function useExpenses(userId: string | null, householdId: string | null) {
     setLoading(true)
     try {
       const data = await fetchExpenses(userId, householdId)
-      setExpenses(data)
-    } catch (error) {
+      setExpenses(data || [])
+    } catch (error: any) {
       console.error("Error loading expenses:", error)
+      
+      // Si erreur réseau (ERR_HTTP2, ERR_CONNECTION_RESET, etc.), garder les données actuelles
+      const isNetworkError = error?.message?.includes('ERR_HTTP2') || 
+                            error?.message?.includes('ERR_CONNECTION_RESET') ||
+                            error?.message?.includes('ERR_CONNECTION_CLOSED') ||
+                            error?.message?.includes('Failed to fetch')
+      
+      if (isNetworkError) {
+        // Garder les données actuelles et ne pas vider l'état
+        console.warn("Network error - keeping current expenses data")
+        // Déclencher un événement pour afficher une notification discrète
+        window.dispatchEvent(new CustomEvent('connectionError', { 
+          detail: error.message || 'ERR_HTTP2_PROTOCOL_ERROR' 
+        }))
+        // Ne pas réinitialiser loadedRef pour éviter les tentatives répétées
+      } else {
+        // Pour les autres erreurs, on garde aussi pour éviter de perdre les données
+      }
+      
       loadedRef.current = false
     } finally {
       setLoading(false)

@@ -15,6 +15,7 @@ function getSupabaseClient(): SupabaseClient {
     throw new Error('Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
+  // Singleton : une seule instance du client Supabase
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
@@ -32,6 +33,11 @@ function getSupabaseClient(): SupabaseClient {
       schema: 'public',
     },
   })
+  
+  // Vérification que le singleton est bien créé
+  if (!supabaseClient) {
+    throw new Error('Failed to create Supabase client')
+  }
   
   return supabaseClient
 }
