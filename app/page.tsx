@@ -484,14 +484,14 @@ export default function Home() {
               </motion.div>
             </motion.div>
           </DrawerTrigger>
-          <DrawerContent className="max-h-[85vh] overflow-y-auto">
-            <DrawerHeader className="text-left pb-2 sm:pb-3">
+          <DrawerContent className="max-h-[calc(100vh-2rem)] flex flex-col">
+            <DrawerHeader className="text-left pb-2 sm:pb-3 flex-shrink-0">
               <DrawerTitle>Nouvelle dépense</DrawerTitle>
               <DrawerDescription>
                 Ajoutez une dépense à votre budget
               </DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-6 sm:pb-6">
+            <div className="px-4 pb-4 overflow-y-auto flex-1 min-h-0">
               <ExpenseForm
                 categories={categories}
                 currentUser={currentUser}
