@@ -56,6 +56,44 @@ export function ExpenseForm({
   const [description, setDescription] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Réinitialiser isSubmitting si le composant reste bloqué trop longtemps (sécurité)
+  useEffect(() => {
+    if (isSubmitting) {
+      const timeout = setTimeout(() => {
+        setIsSubmitting(false)
+      }, 10000) // 10 secondes max
+      return () => clearTimeout(timeout)
+    }
+  }, [isSubmitting])
+
+  // Réinitialiser isSubmitting quand la visibilité de la page change (Alt+Tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isSubmitting) {
+        // Si on revient sur la page et que c'est toujours en soumission, réinitialiser après un court délai
+        setTimeout(() => {
+          setIsSubmitting(false)
+        }, 1000)
+      }
+    }
+
+    const handleFocus = () => {
+      // Réinitialiser isSubmitting quand la fenêtre reprend le focus (Alt+Tab)
+      if (isSubmitting) {
+        setTimeout(() => {
+          setIsSubmitting(false)
+        }, 500)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [isSubmitting])
+
   // Synchroniser le categoryId quand les catégories chargent depuis la BDD
   // Filtrer les catégories avec id='default' qui ne sont pas des UUID valides
   const validCategories = categories.filter(cat => cat.id !== 'default' && cat.id !== '')
@@ -67,31 +105,6 @@ export function ExpenseForm({
       setCategoryId("")
     }
   }, [categories, categoryId])
-
-  // Reset UI si la page redevient visible et qu'un chargement était bloqué
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isSubmitting) {
-        // Si on revient sur la page et qu'on est bloqué en soumission, reset après un délai
-        const timeout = setTimeout(() => {
-          setIsSubmitting(false)
-        }, 5000) // Reset après 5 secondes si toujours bloqué
-        
-        return () => clearTimeout(timeout)
-      }
-    }
-
-    let cleanup: (() => void) | undefined
-    const handler = () => {
-      cleanup = handleVisibilityChange()
-    }
-
-    document.addEventListener('visibilitychange', handler)
-    return () => {
-      document.removeEventListener('visibilitychange', handler)
-      if (cleanup) cleanup()
-    }
-  }, [isSubmitting])
 
 
   // Débounce pour récupérer le logo via Logo.dev

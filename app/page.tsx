@@ -189,46 +189,14 @@ export default function Home() {
       }
     }
 
-    // Gestion du focus : vérifier la session quand l'utilisateur revient sur l'onglet
-    const handleWindowFocus = async () => {
-      if (isMounted && !loading) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession()
-          if (!session?.user) {
-            router.replace("/login")
-          } else if (session.user.id !== user?.id) {
-            // Session a changé, mettre à jour l'utilisateur
-            setUser(session.user)
-            const hId = session.user.user_metadata?.household_id || null
-            setHouseholdId(hId)
-            await loadExpenses(session.user.id, hId)
-          }
-        } catch (error) {
-          // Erreur silencieuse, ne pas bloquer l'UI
-        }
-      }
-    }
-
-    // Gestion de la visibilité : reset les états bloqués quand la page redevient visible
-    const handleVisibilityChange = () => {
-      if (isMounted && document.visibilityState === 'visible') {
-        // Forcer un refresh de session au retour de visibilité
-        handleWindowFocus()
-      }
-    }
-
     window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
-    window.addEventListener('focus', handleWindowFocus)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       isMounted = false
       subscription.unsubscribe()
       window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
-      window.removeEventListener('focus', handleWindowFocus)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [router, loading, user])
+  }, [router])
 
   useEffect(() => {
     if (!loading) {
@@ -478,7 +446,16 @@ export default function Home() {
           />
         </motion.div>
 
-        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <Drawer 
+          open={drawerOpen} 
+          onOpenChange={(open) => {
+            setDrawerOpen(open)
+            // Réinitialiser les états quand le drawer se ferme
+            if (!open) {
+              // Le formulaire sera remonté, donc les états seront réinitialisés
+            }
+          }}
+        >
           <DrawerTrigger asChild>
             <motion.div
               ref={fabRef}
@@ -524,13 +501,16 @@ export default function Home() {
               </DrawerDescription>
             </DrawerHeader>
             <div className="px-4 pb-6 sm:pb-6">
-              <ExpenseForm
-                categories={categories}
-                currentUser={currentUser}
-                userId={user?.id || ""}
-                onSubmit={handleAddExpense}
-                onCancel={() => setDrawerOpen(false)}
-              />
+              {drawerOpen && (
+                <ExpenseForm
+                  key={drawerOpen ? 'open' : 'closed'}
+                  categories={categories}
+                  currentUser={currentUser}
+                  userId={user?.id || ""}
+                  onSubmit={handleAddExpense}
+                  onCancel={() => setDrawerOpen(false)}
+                />
+              )}
             </div>
           </DrawerContent>
         </Drawer>

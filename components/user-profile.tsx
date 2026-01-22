@@ -59,6 +59,20 @@ export function UserProfile({ children }: UserProfileProps) {
 
     checkUser()
 
+    // Réinitialiser les états bloqués quand la page redevient visible (Alt+Tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Réinitialiser les états de chargement bloqués après un court délai
+        setTimeout(() => {
+          if (savingName) setSavingName(false)
+          if (savingPartnerName) setSavingPartnerName(false)
+          if (uploadingPicture) setUploadingPicture(null)
+        }, 1000)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     // Écouter les changements d'authentification
     const {
       data: { subscription },
@@ -73,27 +87,11 @@ export function UserProfile({ children }: UserProfileProps) {
       // Ne pas rediriger automatiquement ici pour éviter les conflits avec la déconnexion
     })
 
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // Reset UI si la page redevient visible et qu'un chargement était bloqué
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Reset les états bloqués après un délai si toujours actifs
-        setTimeout(() => {
-          setSavingName(prev => prev ? false : prev)
-          setSavingPartnerName(prev => prev ? false : prev)
-          setUploadingPicture(prev => prev ? null : prev)
-        }, 5000) // Reset après 5 secondes si toujours bloqué
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
+      subscription.unsubscribe()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [])
+  }, [savingName, savingPartnerName, uploadingPicture])
 
   const handleSignOut = async () => {
     try {
