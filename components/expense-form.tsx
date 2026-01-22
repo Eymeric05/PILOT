@@ -66,33 +66,41 @@ export function ExpenseForm({
     }
   }, [isSubmitting])
 
-  // Réinitialiser isSubmitting quand la visibilité de la page change (Alt+Tab)
+  // Réinitialiser isSubmitting immédiatement quand la visibilité change (Alt+Tab)
   useEffect(() => {
+    const handleReset = () => {
+      setIsSubmitting(false)
+    }
+
+    // Écouter l'événement global de réinitialisation
+    window.addEventListener('resetBlockedStates', handleReset)
+    
+    // Aussi écouter directement les événements de visibilité/focus
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isSubmitting) {
-        // Si on revient sur la page et que c'est toujours en soumission, réinitialiser après un court délai
-        setTimeout(() => {
-          setIsSubmitting(false)
-        }, 1000)
+      if (document.visibilityState === 'visible') {
+        setIsSubmitting(false)
       }
     }
 
     const handleFocus = () => {
-      // Réinitialiser isSubmitting quand la fenêtre reprend le focus (Alt+Tab)
-      if (isSubmitting) {
-        setTimeout(() => {
-          setIsSubmitting(false)
-        }, 500)
-      }
+      setIsSubmitting(false)
+    }
+
+    const handleBlur = () => {
+      setIsSubmitting(false)
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+    
     return () => {
+      window.removeEventListener('resetBlockedStates', handleReset)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
     }
-  }, [isSubmitting])
+  }, [])
 
   // Synchroniser le categoryId quand les catégories chargent depuis la BDD
   // Filtrer les catégories avec id='default' qui ne sont pas des UUID valides
