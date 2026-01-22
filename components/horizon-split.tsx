@@ -22,35 +22,33 @@ interface HorizonSplitProps {
 
 function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "user2", currentUser: UserRole): number {
   return expenses.reduce((total, expense) => {
+    const amount = parseFloat(expense.amount) || 0
+    
     if (zone === "shared") {
-      // Pour la zone "Commun", on compte le montant COMPLET de chaque dépense partagée
-      // (sans division, car c'est le total des dépenses partagées)
+      // Zone "Commun" : montant COMPLET de chaque dépense partagée
+      // Exemple : dépense partagée de 100€ → shared = 100€
       if (expense.isShared) {
-        return total + parseFloat(expense.amount)
+        return total + amount
       }
       return total
     } else if (zone === "user1") {
-      // Pour user1 (Personnel A)
+      // Zone user1 (Personnel A) :
+      // - Si partagée : moitié (ex: 100€ → 50€)
+      // - Si non partagée et payée par user1 : montant complet (ex: 100€ → 100€)
       if (expense.isShared) {
-        // Si la dépense est partagée, user1 doit toujours payer la moitié, peu importe qui l'a payée
-        return total + parseFloat(expense.amount) / 2
-      } else {
-        // Si la dépense n'est pas partagée, on compte seulement si c'est user1 qui l'a payée
-        if (expense.paidBy === currentUser) {
-          return total + parseFloat(expense.amount)
-        }
+        return total + amount / 2
+      } else if (expense.paidBy === currentUser) {
+        return total + amount
       }
       return total
     } else if (zone === "user2") {
-      // Pour user2 (Personnel B)
+      // Zone user2 (Personnel B) :
+      // - Si partagée : moitié (ex: 100€ → 50€)
+      // - Si non partagée et payée par user2 : montant complet (ex: 100€ → 100€)
       if (expense.isShared) {
-        // Si la dépense est partagée, user2 doit toujours payer la moitié, peu importe qui l'a payée
-        return total + parseFloat(expense.amount) / 2
-      } else {
-        // Si la dépense n'est pas partagée, on compte seulement si c'est user2 qui l'a payée
-        if (expense.paidBy === "partner") {
-          return total + parseFloat(expense.amount)
-        }
+        return total + amount / 2
+      } else if (expense.paidBy === "partner") {
+        return total + amount
       }
       return total
     }
@@ -59,6 +57,9 @@ function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "use
 }
 
 export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChange, user }: HorizonSplitProps) {
+  // Calcul des totaux avec partage correct :
+  // - Dépense partagée de 100€ : user1 = 50€, shared = 100€, user2 = 50€
+  // - Dépense non partagée payée par user1 : user1 = 100€, shared = 0€, user2 = 0€
   const user1Total = calculateZoneTotal(expenses, "user1", currentUser)
   const sharedTotal = calculateZoneTotal(expenses, "shared", currentUser)
   const user2Total = calculateZoneTotal(expenses, "user2", currentUser)
@@ -75,27 +76,10 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
   // Pour user2, utiliser le nom personnalisé ou garder "Personnel B" si non défini
   const user2Name = user?.user_metadata?.partner_name || "Personnel B"
   
-  // Récupérer les photos depuis user_metadata
+  // Récupérer les photos depuis user_metadata (base64 ou URL)
   const user1Picture = user?.user_metadata?.profile_picture_url || null
   const user2Picture = user?.user_metadata?.partner_profile_picture_url || null
 
-  // Debug: vérifier les valeurs récupérées
-  useEffect(() => {
-    if (user) {
-      console.log('[HorizonSplit] Métadonnées utilisateur:', {
-        user1Name,
-        user2Name,
-        user1Picture: user1Picture ? `Present (${user1Picture.substring(0, 30)}...)` : 'Missing',
-        user2Picture: user2Picture ? `Present (${user2Picture.substring(0, 30)}...)` : 'Missing',
-        raw_metadata: {
-          display_name: user.user_metadata?.display_name,
-          partner_name: user.user_metadata?.partner_name,
-          profile_picture_url: user.user_metadata?.profile_picture_url ? 'Present' : 'Missing',
-          partner_profile_picture_url: user.user_metadata?.partner_profile_picture_url ? 'Present' : 'Missing',
-        }
-      })
-    }
-  }, [user, user1Name, user2Name, user1Picture, user2Picture])
 
   const cards = [
     { 
@@ -181,8 +165,8 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
             {/* Profile picture or icon */}
             {card.picture ? (
               <div className="relative mb-3">
-                <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border/50 mx-auto">
-                  {card.picture.startsWith('data:image') ? (
+                <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-border/50 mx-auto shadow-lg">
+                  {card.picture.startsWith('data:image') || card.picture.startsWith('data:image/') ? (
                     // Image base64 - utiliser img pour base64
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -197,7 +181,7 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
                       alt={card.label}
                       width={48}
                       height={48}
-                      className="object-cover"
+                      className="w-full h-full object-cover"
                       unoptimized
                     />
                   )}

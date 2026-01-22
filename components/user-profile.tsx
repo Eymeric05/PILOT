@@ -135,6 +135,9 @@ export function UserProfile({ children }: UserProfileProps) {
         },
       })
       setIsEditingName(false)
+      
+      // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
+      window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
     } catch (error: any) {
       console.error("Error updating display name:", error)
       alert(`Erreur lors de la mise à jour: ${error.message}`)
@@ -167,6 +170,9 @@ export function UserProfile({ children }: UserProfileProps) {
         },
       })
       setIsEditingPartnerName(false)
+      
+      // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
+      window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
     } catch (error: any) {
       console.error("Error updating partner name:", error)
       alert(`Erreur lors de la mise à jour: ${error.message}`)

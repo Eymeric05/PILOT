@@ -163,9 +163,21 @@ export default function Home() {
       }
     })
 
+    const handleUserMetadataUpdate = async () => {
+      if (isMounted) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          setUser(session.user)
+        }
+      }
+    }
+
+    window.addEventListener('userMetadataUpdated', handleUserMetadataUpdate)
+
     return () => {
       isMounted = false
       subscription.unsubscribe()
+      window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
     }
   }, [router])
 
