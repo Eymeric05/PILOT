@@ -25,12 +25,13 @@ function getSupabaseClient(): SupabaseClient {
     throw new Error('Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
-  // Utiliser createBrowserClient pour stocker le code verifier PKCE dans les cookies
-  // createBrowserClient configure automatiquement les cookies avec :
-  // - path: '/' (accessible sur toutes les pages)
-  // - sameSite: 'lax' (compatible avec les redirections OAuth)
-  // - secure: true en production (HTTPS uniquement)
-  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  // Utiliser createBrowserClient avec flow implicite pour éviter les problèmes PKCE
+  // Le flow implicite permet de compléter le sign-in même si initié dans un autre environnement
+  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      flowType: 'implicit',
+    },
+  })
   
   return supabaseClient
 }
