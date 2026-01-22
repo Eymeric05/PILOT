@@ -24,18 +24,21 @@ function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "use
   return expenses.reduce((total, expense) => {
     const amount = parseFloat(expense.amount) || 0
     
+    // Si payé par "Nous deux", c'est toujours partagé à 50/50
+    const isPaidByBoth = expense.paidBy === "both"
+    
     if (zone === "shared") {
-      // Zone "Commun" : montant COMPLET de chaque dépense partagée
+      // Zone "Commun" : montant COMPLET de chaque dépense partagée ou payée par "Nous deux"
       // Exemple : dépense partagée de 100€ → shared = 100€
-      if (expense.isShared) {
+      if (expense.isShared || isPaidByBoth) {
         return total + amount
       }
       return total
     } else if (zone === "user1") {
       // Zone user1 (Personnel A) :
-      // - Si partagée : moitié (ex: 100€ → 50€)
+      // - Si partagée ou payée par "Nous deux" : moitié (ex: 100€ → 50€)
       // - Si non partagée et payée par user1 : montant complet (ex: 100€ → 100€)
-      if (expense.isShared) {
+      if (expense.isShared || isPaidByBoth) {
         return total + amount / 2
       } else if (expense.paidBy === currentUser) {
         return total + amount
@@ -43,9 +46,9 @@ function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "use
       return total
     } else if (zone === "user2") {
       // Zone user2 (Personnel B) :
-      // - Si partagée : moitié (ex: 100€ → 50€)
+      // - Si partagée ou payée par "Nous deux" : moitié (ex: 100€ → 50€)
       // - Si non partagée et payée par user2 : montant complet (ex: 100€ → 100€)
-      if (expense.isShared) {
+      if (expense.isShared || isPaidByBoth) {
         return total + amount / 2
       } else if (expense.paidBy === "partner") {
         return total + amount

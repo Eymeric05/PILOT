@@ -67,6 +67,13 @@ export function ExpenseForm({
     }
   }, [categories, categoryId])
 
+  // Si "Nous deux" est sélectionné, cocher automatiquement "Partager la dépense"
+  useEffect(() => {
+    if (paidBy === "both" && !isShared) {
+      setIsShared(true)
+    }
+  }, [paidBy, isShared])
+
   // Débounce pour récupérer le logo via Logo.dev
   useEffect(() => {
     if (!name || name.length < 2) {
@@ -232,6 +239,7 @@ export function ExpenseForm({
             <SelectContent>
               <SelectItem value={userId || "user"}>Moi</SelectItem>
               <SelectItem value="partner">Partenaire</SelectItem>
+              <SelectItem value="both">Nous deux</SelectItem>
             </SelectContent>
           </Select>
         </div>

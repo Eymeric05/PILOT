@@ -184,14 +184,36 @@ export function UserProfile({ children }: UserProfileProps) {
   const handleUploadPicture = async (file: File, type: "user" | "partner") => {
     if (!user) return
 
+    // Valider le type de fichier
+    if (!file.type.startsWith('image/')) {
+      alert("Veuillez sélectionner une image")
+      return
+    }
+
+    // Valider la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("L'image est trop grande. Taille maximale : 5MB")
+      return
+    }
+
     setUploadingPicture(type)
     try {
       // Convertir l'image en base64 pour stockage dans user_metadata
       const reader = new FileReader()
+      
+      reader.onerror = () => {
+        alert("Erreur lors de la lecture du fichier")
+        setUploadingPicture(null)
+      }
+
       reader.onloadend = async () => {
-        const base64String = reader.result as string
-        
         try {
+          const base64String = reader.result as string
+          
+          if (!base64String) {
+            throw new Error("Impossible de convertir l'image")
+          }
+          
           const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
           const { error } = await supabase.auth.updateUser({
             data: { 
@@ -222,16 +244,15 @@ export function UserProfile({ children }: UserProfileProps) {
           // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
           window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
         } catch (error: any) {
-          console.error("Error uploading picture:", error)
-          alert(`Erreur lors du téléchargement: ${error.message}`)
+          alert(`Erreur lors du téléchargement: ${error.message || "Une erreur est survenue"}`)
         } finally {
           setUploadingPicture(null)
         }
       }
+      
       reader.readAsDataURL(file)
     } catch (error: any) {
-      console.error("Error reading file:", error)
-      alert(`Erreur lors de la lecture du fichier: ${error.message}`)
+      alert(`Erreur: ${error.message || "Une erreur est survenue"}`)
       setUploadingPicture(null)
     }
   }
@@ -310,14 +331,23 @@ export function UserProfile({ children }: UserProfileProps) {
               <div className="relative">
                 {profilePicture ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border">
-                    <Image
-                      src={profilePicture}
-                      alt="Photo de profil"
-                      width={64}
-                      height={64}
-                      className="object-cover"
-                      unoptimized
-                    />
+                    {profilePicture.startsWith('data:image') || profilePicture.startsWith('data:image/') ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={profilePicture}
+                        alt="Photo de profil"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={profilePicture}
+                        alt="Photo de profil"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    )}
                     <button
                       onClick={() => handleRemovePicture("user")}
                       className="absolute -top-1 -right-1 p-1 bg-destructive rounded-full text-white hover:bg-destructive/80 transition-colors"
@@ -344,7 +374,11 @@ export function UserProfile({ children }: UserProfileProps) {
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
-                      if (file) handleUploadPicture(file, "user")
+                      if (file) {
+                        handleUploadPicture(file, "user")
+                      }
+                      // Réinitialiser l'input pour permettre de sélectionner le même fichier
+                      e.target.value = ''
                     }}
                     disabled={uploadingPicture === "user"}
                   />
@@ -418,14 +452,23 @@ export function UserProfile({ children }: UserProfileProps) {
               <div className="relative">
                 {partnerProfilePicture ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border">
-                    <Image
-                      src={partnerProfilePicture}
-                      alt="Photo du partenaire"
-                      width={64}
-                      height={64}
-                      className="object-cover"
-                      unoptimized
-                    />
+                    {partnerProfilePicture.startsWith('data:image') || partnerProfilePicture.startsWith('data:image/') ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={partnerProfilePicture}
+                        alt="Photo du partenaire"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={partnerProfilePicture}
+                        alt="Photo du partenaire"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    )}
                     <button
                       onClick={() => handleRemovePicture("partner")}
                       className="absolute -top-1 -right-1 p-1 bg-destructive rounded-full text-white hover:bg-destructive/80 transition-colors"
@@ -452,7 +495,11 @@ export function UserProfile({ children }: UserProfileProps) {
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
-                      if (file) handleUploadPicture(file, "partner")
+                      if (file) {
+                        handleUploadPicture(file, "partner")
+                      }
+                      // Réinitialiser l'input pour permettre de sélectionner le même fichier
+                      e.target.value = ''
                     }}
                     disabled={uploadingPicture === "partner"}
                   />
