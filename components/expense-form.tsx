@@ -56,9 +56,14 @@ export function ExpenseForm({
   const [description, setDescription] = useState("")
 
   // Synchroniser le categoryId quand les catégories chargent depuis la BDD
+  // Filtrer les catégories avec id='default' qui ne sont pas des UUID valides
+  const validCategories = categories.filter(cat => cat.id !== 'default' && cat.id !== '')
+  
   useEffect(() => {
-    if (categories.length > 0 && !categoryId) {
-      setCategoryId(categories[0].id)
+    if (validCategories.length > 0 && !categoryId) {
+      setCategoryId(validCategories[0].id)
+    } else if (validCategories.length === 0 && categoryId) {
+      setCategoryId("")
     }
   }, [categories, categoryId])
 
@@ -81,7 +86,12 @@ export function ExpenseForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !amount || !categoryId) return
+    if (!name || !amount || !categoryId || categoryId === 'default') {
+      if (!categoryId || categoryId === 'default') {
+        alert("Veuillez sélectionner une catégorie valide")
+      }
+      return
+    }
 
     // Utilisation finale de l'URL Logo.dev pour la BDD
     const finalLogoUrl = getLogoDevUrl(name.trim())
@@ -109,8 +119,10 @@ export function ExpenseForm({
         const today = new Date()
         return today.toISOString().split("T")[0]
       })
-      if (categories.length > 0) {
-        setCategoryId(categories[0].id)
+      if (validCategories.length > 0) {
+        setCategoryId(validCategories[0].id)
+      } else {
+        setCategoryId("")
       }
       setDescription("")
     } catch (error) {
@@ -171,11 +183,17 @@ export function ExpenseForm({
               <SelectValue placeholder="Choisir une catégorie" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.icon} {category.name}
+              {validCategories.length === 0 ? (
+                <SelectItem value="" disabled>
+                  Aucune catégorie disponible
                 </SelectItem>
-              ))}
+              ) : (
+                validCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.icon} {category.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
