@@ -56,52 +56,6 @@ export function ExpenseForm({
   const [description, setDescription] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Réinitialiser isSubmitting si le composant reste bloqué trop longtemps (sécurité)
-  useEffect(() => {
-    if (isSubmitting) {
-      const timeout = setTimeout(() => {
-        setIsSubmitting(false)
-      }, 10000) // 10 secondes max
-      return () => clearTimeout(timeout)
-    }
-  }, [isSubmitting])
-
-  // Réinitialiser isSubmitting immédiatement quand la visibilité change (Alt+Tab)
-  useEffect(() => {
-    const handleReset = () => {
-      setIsSubmitting(false)
-    }
-
-    // Écouter l'événement global de réinitialisation
-    window.addEventListener('resetBlockedStates', handleReset)
-    
-    // Aussi écouter directement les événements de visibilité/focus
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setIsSubmitting(false)
-      }
-    }
-
-    const handleFocus = () => {
-      setIsSubmitting(false)
-    }
-
-    const handleBlur = () => {
-      setIsSubmitting(false)
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('blur', handleBlur)
-    
-    return () => {
-      window.removeEventListener('resetBlockedStates', handleReset)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('blur', handleBlur)
-    }
-  }, [])
-
   // Synchroniser le categoryId quand les catégories chargent depuis la BDD
   // Filtrer les catégories avec id='default' qui ne sont pas des UUID valides
   const validCategories = categories.filter(cat => cat.id !== 'default' && cat.id !== '')

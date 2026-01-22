@@ -59,35 +59,6 @@ export function UserProfile({ children }: UserProfileProps) {
 
     checkUser()
 
-    // Réinitialiser les états bloqués immédiatement quand la page redevient visible (Alt+Tab)
-    const handleReset = () => {
-      setSavingName(false)
-      setSavingPartnerName(false)
-      setUploadingPicture(null)
-    }
-
-    // Écouter l'événement global de réinitialisation
-    window.addEventListener('resetBlockedStates', handleReset)
-    
-    // Aussi écouter directement les événements de visibilité/focus
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        handleReset()
-      }
-    }
-
-    const handleFocus = () => {
-      handleReset()
-    }
-
-    const handleBlur = () => {
-      handleReset()
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('blur', handleBlur)
-
     // Écouter les changements d'authentification
     const {
       data: { subscription },
@@ -102,13 +73,7 @@ export function UserProfile({ children }: UserProfileProps) {
       // Ne pas rediriger automatiquement ici pour éviter les conflits avec la déconnexion
     })
 
-    return () => {
-      subscription.unsubscribe()
-      window.removeEventListener('resetBlockedStates', handleReset)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('blur', handleBlur)
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleSignOut = async () => {

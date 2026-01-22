@@ -33,7 +33,6 @@ export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [formKey, setFormKey] = useState(0)
   const [activeFilter, setActiveFilter] = useState<FilterZone>(null)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [householdId, setHouseholdId] = useState<string | null>(null)
@@ -110,36 +109,6 @@ export default function Home() {
     
     // Charger les catégories immédiatement sans vérification de session
     loadCategories()
-
-    // Réinitialiser tous les états bloquants quand la page redevient visible (Alt+Tab)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Déclencher un événement global pour réinitialiser tous les états bloquants
-        window.dispatchEvent(new CustomEvent('resetBlockedStates'))
-        // Forcer la réinitialisation du formulaire si ouvert
-        if (drawerOpen) {
-          setFormKey(prev => prev + 1)
-        }
-      }
-    }
-
-    const handleFocus = () => {
-      // Déclencher un événement global pour réinitialiser tous les états bloquants
-      window.dispatchEvent(new CustomEvent('resetBlockedStates'))
-      // Forcer la réinitialisation du formulaire si ouvert
-      if (drawerOpen) {
-        setFormKey(prev => prev + 1)
-      }
-    }
-
-    const handleBlur = () => {
-      // Réinitialiser aussi quand on perd le focus pour éviter les états bloqués
-      window.dispatchEvent(new CustomEvent('resetBlockedStates'))
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('blur', handleBlur)
 
     // Timeout de sécurité : forcer la redirection après 1.5 secondes si toujours en chargement
     timeoutId = setTimeout(() => {
@@ -226,11 +195,8 @@ export default function Home() {
       isMounted = false
       subscription.unsubscribe()
       window.removeEventListener('userMetadataUpdated', handleUserMetadataUpdate)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('blur', handleBlur)
     }
-  }, [router, drawerOpen])
+  }, [router])
 
   useEffect(() => {
     if (!loading) {
@@ -480,16 +446,7 @@ export default function Home() {
           />
         </motion.div>
 
-        <Drawer 
-          open={drawerOpen} 
-          onOpenChange={(open) => {
-            setDrawerOpen(open)
-            // Forcer le remontage complet du formulaire à chaque ouverture
-            if (open) {
-              setFormKey(prev => prev + 1)
-            }
-          }}
-        >
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <motion.div
               ref={fabRef}
@@ -536,7 +493,6 @@ export default function Home() {
             </DrawerHeader>
             <div className="px-4 pb-6 sm:pb-6">
               <ExpenseForm
-                key={formKey}
                 categories={categories}
                 currentUser={currentUser}
                 userId={user?.id || ""}
