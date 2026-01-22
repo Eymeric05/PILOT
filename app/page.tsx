@@ -105,9 +105,18 @@ export default function Home() {
 
   useEffect(() => {
     let isMounted = true
+    let timeoutId: NodeJS.Timeout | null = null
     
     // Charger les catégories immédiatement sans vérification de session
     loadCategories()
+
+    // Timeout de sécurité : forcer la redirection après 1.5 secondes si toujours en chargement
+    timeoutId = setTimeout(() => {
+      if (isMounted && loading && !user) {
+        setLoading(false)
+        router.replace("/login")
+      }
+    }, 1500)
 
     const initApp = async () => {
       try {
@@ -115,12 +124,15 @@ export default function Home() {
         
         if (!session?.user) {
           if (isMounted) {
+            if (timeoutId) clearTimeout(timeoutId)
+            setLoading(false)
             router.replace("/login")
           }
           return
         }
         
         if (isMounted) {
+          if (timeoutId) clearTimeout(timeoutId)
           setUser(session.user)
           const hId = session.user.user_metadata?.household_id || null
           setHouseholdId(hId)
@@ -128,6 +140,9 @@ export default function Home() {
           setLoading(false)
         }
       } catch (error: any) {
+        if (isMounted) {
+          if (timeoutId) clearTimeout(timeoutId)
+        }
         if (error?.message?.includes('Failed to fetch') || error?.message?.includes('ERR_CONNECTION_RESET')) {
           setConnectionError('Serveur Supabase injoignable')
           if (isMounted) {
@@ -135,6 +150,7 @@ export default function Home() {
           }
         } else {
           if (isMounted) {
+            setLoading(false)
             router.replace("/login")
           }
         }
@@ -215,13 +231,13 @@ export default function Home() {
   const filteredExpenses = useMemo(() => {
     if (!activeFilter) return monthlyExpenses
     if (activeFilter === "shared") {
-      return monthlyExpenses.filter(e => e.isShared || e.paidBy === "both")
+      return monthlyExpenses.filter(e => e.isShared)
     }
     if (activeFilter === "user1") {
-      return monthlyExpenses.filter(e => e.paidBy === currentUser || e.isShared || e.paidBy === "both")
+      return monthlyExpenses.filter(e => e.paidBy === currentUser || e.isShared)
     }
     if (activeFilter === "user2") {
-      return monthlyExpenses.filter(e => e.paidBy === "partner" || e.isShared || e.paidBy === "both")
+      return monthlyExpenses.filter(e => e.paidBy === "partner" || e.isShared)
     }
     return monthlyExpenses
   }, [monthlyExpenses, activeFilter, currentUser])
@@ -251,21 +267,48 @@ export default function Home() {
       const userId = user?.id || session.user.id
       const hId = householdId || session.user.user_metadata?.household_id || null
       
+      // Optimistic UI : ajouter la dépense localement immédiatement
+      const newExpense: Expense = {
+        id: `temp-${Date.now()}`,
+        name: expenseData.name,
+        amount: expenseData.amount,
+        categoryId: expenseData.categoryId,
+        paidBy: expenseData.paidBy,
+        isShared: expenseData.isShared,
+        logoUrl: expenseData.logoUrl,
+        description: expenseData.description,
+        expenseDate: expenseData.expenseDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+      setExpenses(prev => [newExpense, ...prev])
+      setDrawerOpen(false)
+      
+      // Puis créer en base de données
       await createExpense(
         expenseData,
         userId,
         hId,
         expenseData.isRecurring
       )
+      
+      // Recharger pour avoir l'ID réel
       await loadExpenses(userId, hId)
-      setDrawerOpen(false)
     } catch (error: any) {
+      // En cas d'erreur, retirer la dépense optimiste
+      setExpenses(prev => prev.filter(e => !e.id.startsWith('temp-')))
       const errorMsg = error.message || "Une erreur est survenue lors de l'ajout de la dépense"
       alert(`Erreur: ${errorMsg}`)
       throw error
     }
   }
 
+  // Si pas d'utilisateur après le chargement, ne rien afficher (redirection en cours)
+  if (!user && !loading) {
+    return null
+  }
+
+  // Afficher le spinner seulement si on charge ET qu'on a pas encore vérifié l'utilisateur
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background gradient-mesh">
@@ -285,6 +328,7 @@ export default function Home() {
     )
   }
 
+  // Si pas d'utilisateur, ne rien afficher (redirection en cours)
   if (!user) {
     return null
   }
@@ -386,8 +430,18 @@ export default function Home() {
             currentUser={currentUser}
             activeFilter={activeFilter}
             onDelete={async (id: string) => {
-              await deleteExpense(id)
+              // Optimistic UI : retirer immédiatement de la liste
               setExpenses(prev => prev.filter(e => e.id !== id))
+              
+              try {
+                await deleteExpense(id)
+              } catch (error: any) {
+                // En cas d'erreur, recharger les dépenses pour restaurer l'état
+                if (user) {
+                  await loadExpenses(user.id, householdId)
+                }
+                alert(`Erreur lors de la suppression: ${error.message || "Une erreur est survenue"}`)
+              }
             }}
           />
         </motion.div>

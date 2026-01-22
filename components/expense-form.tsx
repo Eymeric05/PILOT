@@ -54,6 +54,7 @@ export function ExpenseForm({
   })
   const [isRecurring, setIsRecurring] = useState(false)
   const [description, setDescription] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Synchroniser le categoryId quand les catégories chargent depuis la BDD
   // Filtrer les catégories avec id='default' qui ne sont pas des UUID valides
@@ -67,12 +68,6 @@ export function ExpenseForm({
     }
   }, [categories, categoryId])
 
-  // Si "Nous deux" est sélectionné, cocher automatiquement "Partager la dépense"
-  useEffect(() => {
-    if (paidBy === "both" && !isShared) {
-      setIsShared(true)
-    }
-  }, [paidBy, isShared])
 
   // Débounce pour récupérer le logo via Logo.dev
   useEffect(() => {
@@ -93,6 +88,8 @@ export function ExpenseForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
+    
     if (!name || !amount || !categoryId || categoryId === 'default') {
       if (!categoryId || categoryId === 'default') {
         alert("Veuillez sélectionner une catégorie valide")
@@ -100,7 +97,7 @@ export function ExpenseForm({
       return
     }
 
-    // Utilisation finale de l'URL Logo.dev pour la BDD
+    setIsSubmitting(true)
     const finalLogoUrl = getLogoDevUrl(name.trim())
 
     try {
@@ -116,12 +113,13 @@ export function ExpenseForm({
         description: description.trim() || null,
       })
 
-      // Reset form seulement après succès
+      // Reset form immédiatement après succès
       setName("")
       setAmount("")
       setIsShared(true)
       setLogoUrl(null)
       setIsRecurring(false)
+      setPaidBy(userId || "")
       setExpenseDate(() => {
         const today = new Date()
         return today.toISOString().split("T")[0]
@@ -133,8 +131,9 @@ export function ExpenseForm({
       }
       setDescription("")
     } catch (error) {
-      console.error("Error submitting form:", error)
-      // Ne pas reset le formulaire en cas d'erreur
+      // L'erreur est gérée par le parent
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -163,6 +162,7 @@ export function ExpenseForm({
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: Netflix, Carrefour..."
             required
+            disabled={isSubmitting}
             className="h-10"
           />
         </div>
@@ -179,13 +179,14 @@ export function ExpenseForm({
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
             required
+            disabled={isSubmitting}
             className="h-10"
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="category" className="text-sm font-medium tracking-tight">Catégorie</Label>
-          <Select value={categoryId} onValueChange={setCategoryId}>
+          <Select value={categoryId} onValueChange={setCategoryId} disabled={isSubmitting}>
             <SelectTrigger id="category" className="h-10">
               <SelectValue placeholder="Choisir une catégorie" />
             </SelectTrigger>
@@ -227,19 +228,19 @@ export function ExpenseForm({
             }}
             className="cursor-pointer h-10"
             required
+            disabled={isSubmitting}
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="paidBy" className="text-sm font-medium tracking-tight">Payé par</Label>
-          <Select value={paidBy} onValueChange={(value) => setPaidBy(value as UserRole)}>
+          <Select value={paidBy} onValueChange={(value) => setPaidBy(value as UserRole)} disabled={isSubmitting}>
             <SelectTrigger id="paidBy" className="h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={userId || "user"}>Moi</SelectItem>
               <SelectItem value="partner">Partenaire</SelectItem>
-              <SelectItem value="both">Nous deux</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -252,6 +253,7 @@ export function ExpenseForm({
             id="isShared"
             checked={isShared}
             onChange={(e) => setIsShared(e.target.checked)}
+            disabled={isSubmitting}
             className="h-4 w-4 rounded border-border/50 accent-primary transition-colors"
           />
           <Label htmlFor="isShared" className="text-sm font-normal tracking-tight cursor-pointer">Partager la dépense</Label>
@@ -263,6 +265,7 @@ export function ExpenseForm({
             id="isRecurring"
             checked={isRecurring}
             onChange={(e) => setIsRecurring(e.target.checked)}
+            disabled={isSubmitting}
             className="h-4 w-4 rounded border-border/50 accent-primary transition-colors"
           />
           <Label htmlFor="isRecurring" className="text-sm font-normal tracking-tight cursor-pointer">Répéter chaque mois (12 mois)</Label>
@@ -276,17 +279,20 @@ export function ExpenseForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Ex: Paiement en plusieurs fois, remboursement..."
+          disabled={isSubmitting}
           className="h-10"
         />
       </div>
 
       <div className="flex gap-3 pt-1">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} className="flex-1 h-10">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting} className="flex-1 h-10">
             Annuler
           </Button>
         )}
-        <Button type="submit" className="flex-1 h-10">Ajouter</Button>
+        <Button type="submit" className="flex-1 h-10" disabled={isSubmitting}>
+          {isSubmitting ? "Ajout..." : "Ajouter"}
+        </Button>
       </div>
     </form>
   )

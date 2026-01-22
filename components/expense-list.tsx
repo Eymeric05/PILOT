@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Expense, Category, UserRole } from "@/types"
-import { formatAmount, getDisplayAmount } from "@/lib/expense-utils"
+import { formatAmount, getDisplayAmount, formatExpenseDate } from "@/lib/expense-utils"
 import { getClearbitLogoUrl, getGoogleFaviconUrl } from "@/lib/logo-utils"
 import { Users, X } from "lucide-react"
 import Image from "next/image"
@@ -126,17 +126,22 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete, activ
                   </motion.div>
                 )}
               </div>
-              {expense.categoryId && categories.find((c: Category) => c.id === expense.categoryId) && (
-                <p className="text-xs text-muted-foreground tracking-wide flex items-center gap-1">
-                  <span>{categories.find((c: Category) => c.id === expense.categoryId)?.icon}</span>
-                  <span>{categories.find((c: Category) => c.id === expense.categoryId)?.name}</span>
+              <div className="space-y-1">
+                {expense.categoryId && categories.find((c: Category) => c.id === expense.categoryId) && (
+                  <p className="text-xs text-muted-foreground tracking-wide flex items-center gap-1">
+                    <span>{categories.find((c: Category) => c.id === expense.categoryId)?.icon}</span>
+                    <span>{categories.find((c: Category) => c.id === expense.categoryId)?.name}</span>
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground/70">
+                  {formatExpenseDate(expense.expenseDate)}
                 </p>
-              )}
-              {expense.description && (
-                <p className="text-xs text-muted-foreground/80 italic mt-1 truncate">
-                  {expense.description}
-                </p>
-              )}
+                {expense.description && (
+                  <p className="text-xs text-muted-foreground/80 italic mt-1 truncate">
+                    {expense.description}
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="text-right shrink-0 relative z-10 pr-12">

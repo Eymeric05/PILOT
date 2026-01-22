@@ -181,87 +181,119 @@ export function UserProfile({ children }: UserProfileProps) {
     }
   }
 
-  const handleUploadPicture = async (file: File, type: "user" | "partner") => {
-    if (!user) return
+  const handleUploadPicture = async (file: File, type: "user" | "partner"): Promise<void> => {
+    if (!user) {
+      return Promise.reject(new Error("Utilisateur non connecté"))
+    }
 
     // Valider le type de fichier
     if (!file.type.startsWith('image/')) {
       alert("Veuillez sélectionner une image")
-      return
+      return Promise.reject(new Error("Type de fichier invalide"))
     }
 
     // Valider la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("L'image est trop grande. Taille maximale : 5MB")
-      return
+      return Promise.reject(new Error("Fichier trop volumineux"))
     }
 
     setUploadingPicture(type)
-    try {
-      // Convertir l'image en base64 pour stockage dans user_metadata
-      const reader = new FileReader()
-      
-      reader.onerror = () => {
-        alert("Erreur lors de la lecture du fichier")
-        setUploadingPicture(null)
-      }
-
-      reader.onloadend = async () => {
-        try {
-          const base64String = reader.result as string
-          
-          if (!base64String) {
-            throw new Error("Impossible de convertir l'image")
-          }
-          
-          const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
-          const { error } = await supabase.auth.updateUser({
-            data: { 
-              [metadataKey]: base64String,
-              display_name: displayName.trim(),
-              partner_name: partnerName.trim(),
-              profile_picture_url: type === "user" ? base64String : profilePicture,
-              partner_profile_picture_url: type === "partner" ? base64String : partnerProfilePicture,
-            },
-          })
-
-          if (error) throw error
-
-          if (type === "user") {
-            setProfilePicture(base64String)
-          } else {
-            setPartnerProfilePicture(base64String)
-          }
-
-          setUser({
-            ...user,
-            user_metadata: {
-              ...user.user_metadata,
-              [metadataKey]: base64String,
-            },
-          })
-
-          // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
-          window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
-        } catch (error: any) {
-          alert(`Erreur lors du téléchargement: ${error.message || "Une erreur est survenue"}`)
-        } finally {
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const reader = new FileReader()
+        const previousPicture = type === "user" ? profilePicture : partnerProfilePicture
+        
+        reader.onerror = () => {
           setUploadingPicture(null)
+          alert("Erreur lors de la lecture du fichier")
+          reject(new Error("Erreur de lecture"))
         }
+
+        reader.onloadend = async () => {
+          try {
+            const base64String = reader.result as string
+            
+            if (!base64String) {
+              throw new Error("Impossible de convertir l'image")
+            }
+            
+            // Optimistic UI : mettre à jour immédiatement
+            if (type === "user") {
+              setProfilePicture(base64String)
+            } else {
+              setPartnerProfilePicture(base64String)
+            }
+
+            setUser({
+              ...user,
+              user_metadata: {
+                ...user.user_metadata,
+                [type === "user" ? "profile_picture_url" : "partner_profile_picture_url"]: base64String,
+              },
+            })
+            
+            const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
+            const { error } = await supabase.auth.updateUser({
+              data: { 
+                [metadataKey]: base64String,
+                display_name: displayName.trim(),
+                partner_name: partnerName.trim(),
+                profile_picture_url: type === "user" ? base64String : profilePicture,
+                partner_profile_picture_url: type === "partner" ? base64String : partnerProfilePicture,
+              },
+            })
+
+            if (error) throw error
+
+            window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
+            resolve()
+          } catch (error: any) {
+            // En cas d'erreur, restaurer l'état précédent
+            if (type === "user") {
+              setProfilePicture(previousPicture)
+            } else {
+              setPartnerProfilePicture(previousPicture)
+            }
+            setUser(user)
+            alert(`Erreur lors du téléchargement: ${error.message || "Une erreur est survenue"}`)
+            reject(error)
+          } finally {
+            setUploadingPicture(null)
+          }
+        }
+        
+        reader.readAsDataURL(file)
+      } catch (error: any) {
+        setUploadingPicture(null)
+        alert(`Erreur: ${error.message || "Une erreur est survenue"}`)
+        reject(error)
       }
-      
-      reader.readAsDataURL(file)
-    } catch (error: any) {
-      alert(`Erreur: ${error.message || "Une erreur est survenue"}`)
-      setUploadingPicture(null)
-    }
+    })
   }
 
   const handleRemovePicture = async (type: "user" | "partner") => {
     if (!user) return
 
+    const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
+    
+    // Optimistic UI : retirer la photo immédiatement
+    if (type === "user") {
+      setProfilePicture(null)
+    } else {
+      setPartnerProfilePicture(null)
+    }
+
+    setUser({
+      ...user,
+      user_metadata: {
+        ...user.user_metadata,
+        [metadataKey]: null,
+      },
+    })
+
     try {
-      const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
       const { error } = await supabase.auth.updateUser({
         data: { 
           [metadataKey]: null,
@@ -274,24 +306,16 @@ export function UserProfile({ children }: UserProfileProps) {
 
       if (error) throw error
 
-      if (type === "user") {
-        setProfilePicture(null)
-      } else {
-        setPartnerProfilePicture(null)
-      }
-
-      setUser({
-        ...user,
-        user_metadata: {
-          ...user.user_metadata,
-          [metadataKey]: null,
-        },
-      })
-
       // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
       window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
     } catch (error: any) {
-      console.error("Error removing picture:", error)
+      // En cas d'erreur, restaurer la photo
+      if (type === "user") {
+        setProfilePicture(user.user_metadata?.profile_picture_url || null)
+      } else {
+        setPartnerProfilePicture(user.user_metadata?.partner_profile_picture_url || null)
+      }
+      setUser(user)
       alert(`Erreur lors de la suppression: ${error.message}`)
     }
   }
@@ -325,10 +349,10 @@ export function UserProfile({ children }: UserProfileProps) {
           <div className="space-y-3">
             <div className="flex items-center gap-2 mb-2">
               <Settings className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-semibold">Mon profil (Personnel A)</Label>
+              <Label className="text-sm font-semibold">Mon profil ({user.user_metadata?.display_name || user.email?.split("@")[0] || "Utilisateur"})</Label>
             </div>
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border-2 border-border">
-              <div className="relative">
+              <div className="relative flex items-center gap-2">
                 {profilePicture ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border">
                     {profilePicture.startsWith('data:image') || profilePicture.startsWith('data:image/') ? (
@@ -348,41 +372,50 @@ export function UserProfile({ children }: UserProfileProps) {
                         unoptimized
                       />
                     )}
-                    <button
-                      onClick={() => handleRemovePicture("user")}
-                      className="absolute -top-1 -right-1 p-1 bg-destructive rounded-full text-white hover:bg-destructive/80 transition-colors"
-                      aria-label="Supprimer la photo"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
                   </div>
                 ) : (
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-primary/10 border-2 border-border">
                     <User className="h-8 w-8 text-primary" />
                   </div>
                 )}
-                <label
-                  htmlFor="userPicture"
-                  className="absolute -bottom-1 -right-1 p-1.5 bg-primary rounded-full text-primary-foreground hover:bg-primary/80 transition-colors cursor-pointer"
-                  title="Changer la photo"
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                  <input
-                    id="userPicture"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        handleUploadPicture(file, "user")
-                      }
-                      // Réinitialiser l'input pour permettre de sélectionner le même fichier
-                      e.target.value = ''
-                    }}
-                    disabled={uploadingPicture === "user"}
-                  />
-                </label>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="userPicture"
+                    className="p-1.5 bg-primary rounded-full text-primary-foreground hover:bg-primary/80 transition-colors cursor-pointer"
+                    title="Changer la photo"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    <input
+                      id="userPicture"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        const input = e.target
+                        if (file) {
+                          handleUploadPicture(file, "user").finally(() => {
+                            // Réinitialiser l'input après traitement
+                            input.value = ''
+                          })
+                        } else {
+                          input.value = ''
+                        }
+                      }}
+                      disabled={uploadingPicture === "user"}
+                    />
+                  </label>
+                  {profilePicture && (
+                    <button
+                      onClick={() => handleRemovePicture("user")}
+                      disabled={uploadingPicture === "user"}
+                      className="p-1.5 bg-destructive rounded-full text-white hover:bg-destructive/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Supprimer la photo"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 {isEditingName ? (
@@ -449,7 +482,7 @@ export function UserProfile({ children }: UserProfileProps) {
               <Label className="text-sm font-semibold">Partenaire (Personnel B)</Label>
             </div>
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border-2 border-border">
-              <div className="relative">
+              <div className="relative flex items-center gap-2">
                 {partnerProfilePicture ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border">
                     {partnerProfilePicture.startsWith('data:image') || partnerProfilePicture.startsWith('data:image/') ? (
@@ -469,41 +502,50 @@ export function UserProfile({ children }: UserProfileProps) {
                         unoptimized
                       />
                     )}
-                    <button
-                      onClick={() => handleRemovePicture("partner")}
-                      className="absolute -top-1 -right-1 p-1 bg-destructive rounded-full text-white hover:bg-destructive/80 transition-colors"
-                      aria-label="Supprimer la photo"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
                   </div>
                 ) : (
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-secondary/50 border-2 border-border">
                     <User className="h-8 w-8 text-muted-foreground" />
                   </div>
                 )}
-                <label
-                  htmlFor="partnerPicture"
-                  className="absolute -bottom-1 -right-1 p-1.5 bg-secondary rounded-full text-secondary-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
-                  title="Changer la photo"
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                  <input
-                    id="partnerPicture"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="partnerPicture"
+                    className="p-1.5 bg-secondary rounded-full text-secondary-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
+                    title="Changer la photo"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    <input
+                      id="partnerPicture"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
+                      const input = e.target
                       if (file) {
-                        handleUploadPicture(file, "partner")
+                        handleUploadPicture(file, "partner").finally(() => {
+                          // Réinitialiser l'input après traitement
+                          input.value = ''
+                        })
+                      } else {
+                        input.value = ''
                       }
-                      // Réinitialiser l'input pour permettre de sélectionner le même fichier
-                      e.target.value = ''
                     }}
                     disabled={uploadingPicture === "partner"}
-                  />
-                </label>
+                    />
+                  </label>
+                  {partnerProfilePicture && (
+                    <button
+                      onClick={() => handleRemovePicture("partner")}
+                      disabled={uploadingPicture === "partner"}
+                      className="p-1.5 bg-destructive rounded-full text-white hover:bg-destructive/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Supprimer la photo"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 {isEditingPartnerName ? (

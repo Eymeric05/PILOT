@@ -58,3 +58,18 @@ export function calculateMonthlyTotal(
     return total;
   }, 0);
 }
+
+/**
+ * Formate une date au format "JOUR MOIS ANNEE" en français
+ */
+export function formatExpenseDate(date: Date | string): string {
+  const expenseDate = typeof date === 'string' ? new Date(date) : date
+  const months = [
+    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+  ]
+  const day = expenseDate.getDate()
+  const month = months[expenseDate.getMonth()]
+  const year = expenseDate.getFullYear()
+  return `${day} ${month} ${year}`
+}
