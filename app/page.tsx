@@ -47,7 +47,15 @@ export default function Home() {
     try {
       const { data, error } = await supabase.from("categories").select("*")
       
-      if (error) throw error
+      if (error) {
+        setCategories([{
+          id: 'default',
+          name: 'Divers',
+          icon: '📦',
+          createdAt: new Date()
+        }])
+        return
+      }
 
       if (!data || data.length === 0) {
         const defaultCategory = { name: "Divers", icon: "📦" }
@@ -201,20 +209,37 @@ export default function Home() {
   }, [filteredExpenses])
 
   const handleAddExpense = async (expenseData: any) => {
-    if (!user) {
-      throw new Error("Utilisateur non connecté")
+    // Vérifier la session avant d'ajouter
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session?.user) {
+      const errorMsg = "Vous devez être connecté pour ajouter une dépense"
+      alert(errorMsg)
+      throw new Error(errorMsg)
     }
+
+    if (!user) {
+      // Mettre à jour l'utilisateur depuis la session
+      setUser(session.user)
+      const hId = session.user.user_metadata?.household_id || null
+      setHouseholdId(hId)
+    }
+
     try {
+      const userId = user?.id || session.user.id
+      const hId = householdId || session.user.user_metadata?.household_id || null
+      
       await createExpense(
         expenseData,
-        user.id,
-        householdId,
+        userId,
+        hId,
         expenseData.isRecurring
       )
-      await loadExpenses(user.id, householdId)
+      await loadExpenses(userId, hId)
       setDrawerOpen(false)
     } catch (error: any) {
-      alert(`Erreur lors de l'ajout de la dépense: ${error.message || "Une erreur est survenue"}`)
+      const errorMsg = error.message || "Une erreur est survenue lors de l'ajout de la dépense"
+      alert(`Erreur: ${errorMsg}`)
       throw error
     }
   }
@@ -380,13 +405,13 @@ export default function Home() {
             </motion.div>
           </DrawerTrigger>
           <DrawerContent>
-            <DrawerHeader className="text-left pb-4">
-              <DrawerTitle className="text-2xl font-bold">Nouvelle dépense</DrawerTitle>
-              <DrawerDescription className="text-base">
+            <DrawerHeader className="text-left pb-2 sm:pb-3">
+              <DrawerTitle>Nouvelle dépense</DrawerTitle>
+              <DrawerDescription>
                 Ajoutez une dépense à votre budget
               </DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-8">
+            <div className="px-4 pb-6 sm:pb-6">
               <ExpenseForm
                 categories={categories}
                 currentUser={currentUser}

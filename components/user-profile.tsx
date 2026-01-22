@@ -40,15 +40,17 @@ export function UserProfile({ children }: UserProfileProps) {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        if (error) throw error
-        setUser(user)
-        setDisplayName(user?.user_metadata?.display_name || user?.email?.split("@")[0] || "")
-        setPartnerName(user?.user_metadata?.partner_name || "Personnel B")
-        setProfilePicture(user?.user_metadata?.profile_picture_url || null)
-        setPartnerProfilePicture(user?.user_metadata?.partner_profile_picture_url || null)
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          setUser(session.user)
+          setDisplayName(session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "")
+          setPartnerName(session.user.user_metadata?.partner_name || "Personnel B")
+          setProfilePicture(session.user.user_metadata?.profile_picture_url || null)
+          setPartnerProfilePicture(session.user.user_metadata?.partner_profile_picture_url || null)
+        } else {
+          setUser(null)
+        }
       } catch (error) {
-        console.error("Error getting user:", error)
         setUser(null)
       } finally {
         setLoading(false)
