@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -56,22 +56,25 @@ export function ExpenseForm({
   const [description, setDescription] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Synchroniser le categoryId quand les catégories chargent depuis la BDD
   // Filtrer les catégories avec id='default' qui ne sont pas des UUID valides
-  const validCategories = categories.filter(cat => cat.id !== 'default' && cat.id !== '')
+  const validCategories = useMemo(() => 
+    categories.filter(cat => cat.id !== 'default' && cat.id !== ''),
+    [categories]
+  )
   
+  // Synchroniser le categoryId quand les catégories chargent
   useEffect(() => {
-    if (validCategories.length > 0) {
-      // Si pas de catégorie sélectionnée ou si la catégorie sélectionnée n'est plus valide, sélectionner la première
-      const currentCategoryValid = categoryId && categoryId !== '' && validCategories.find(cat => cat.id === categoryId)
+    if (validCategories.length > 0 && (!categoryId || categoryId === '')) {
+      // Sélectionner automatiquement la première catégorie si aucune n'est sélectionnée
+      setCategoryId(validCategories[0].id)
+    } else if (validCategories.length > 0 && categoryId) {
+      // Vérifier que la catégorie sélectionnée est toujours valide
+      const currentCategoryValid = validCategories.some(cat => cat.id === categoryId)
       if (!currentCategoryValid) {
         setCategoryId(validCategories[0].id)
       }
-    } else if (validCategories.length === 0) {
-      // Réinitialiser si plus de catégories valides
-      setCategoryId("")
     }
-  }, [categories, categoryId, validCategories])
+  }, [validCategories])
 
 
   // Débounce pour récupérer le logo via Logo.dev
@@ -193,24 +196,22 @@ export function ExpenseForm({
           <Label htmlFor="category" className="text-sm font-medium tracking-tight">Catégorie</Label>
           <Select 
             value={categoryId || undefined} 
-            onValueChange={(value) => setCategoryId(value)} 
+            onValueChange={(value) => {
+              if (value) {
+                setCategoryId(value)
+              }
+            }} 
             disabled={isSubmitting || validCategories.length === 0}
           >
             <SelectTrigger id="category" className="h-10">
-              <SelectValue placeholder="Choisir une catégorie" />
+              <SelectValue placeholder={validCategories.length === 0 ? "Aucune catégorie disponible" : "Choisir une catégorie"} />
             </SelectTrigger>
             <SelectContent>
-              {validCategories.length === 0 ? (
-                <div className="py-3 pl-8 pr-2 text-sm text-muted-foreground">
-                  Aucune catégorie disponible
-                </div>
-              ) : (
-                validCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.icon} {category.name}
-                  </SelectItem>
-                ))
-              )}
+              {validCategories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.icon} {category.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
