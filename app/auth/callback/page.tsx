@@ -9,17 +9,17 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      // Supabase détecte automatiquement les tokens dans l'URL
-      const { data: { session } } = await supabase.auth.getSession()
+      // Attendre que Supabase traite le callback OAuth
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      if (session?.user) {
-        router.replace("/")
-      } else {
-        // Attendre un peu pour que Supabase traite le callback
-        setTimeout(() => {
-          router.replace("/")
-        }, 500)
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      if (error || !session?.user) {
+        router.replace("/login?error=Connexion échouée")
+        return
       }
+      
+      router.replace("/")
     }
 
     handleAuthCallback()

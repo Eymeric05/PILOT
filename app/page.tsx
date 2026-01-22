@@ -113,14 +113,19 @@ export default function Home() {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         
-        if (session?.user && isMounted) {
+        if (!session?.user) {
+          if (isMounted) {
+            setLoading(false)
+            router.push("/login")
+          }
+          return
+        }
+        
+        if (isMounted) {
           setUser(session.user)
           const hId = session.user.user_metadata?.household_id || null
           setHouseholdId(hId)
           await loadExpenses(session.user.id, hId)
-        }
-        
-        if (isMounted) {
           setLoading(false)
         }
       } catch (error: any) {
@@ -130,6 +135,7 @@ export default function Home() {
         
         if (isMounted) {
           setLoading(false)
+          router.push("/login")
         }
       }
     }
@@ -142,6 +148,7 @@ export default function Home() {
           setUser(null)
           setHouseholdId(null)
           setExpenses([])
+          router.push("/login")
           return
         }
         
@@ -244,7 +251,7 @@ export default function Home() {
     }
   }
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-background gradient-mesh">
         <motion.div
