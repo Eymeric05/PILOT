@@ -40,10 +40,14 @@ export default function Home() {
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const headerRef = useRef<HTMLElement>(null)
   const fabRef = useRef<HTMLDivElement>(null)
+  const categoriesLoadedRef = useRef(false)
 
   const currentUser: UserRole = user?.id || ""
 
   const loadCategories = async () => {
+    // Éviter les appels multiples
+    if (categoriesLoadedRef.current) return
+    categoriesLoadedRef.current = true
     try {
       const { data, error } = await supabase.from("categories").select("*")
       

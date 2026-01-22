@@ -186,15 +186,15 @@ export function ExpenseForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="category" className="text-sm font-medium tracking-tight">Catégorie</Label>
-          <Select value={categoryId} onValueChange={setCategoryId} disabled={isSubmitting}>
+          <Select value={categoryId || undefined} onValueChange={setCategoryId} disabled={isSubmitting || validCategories.length === 0}>
             <SelectTrigger id="category" className="h-10">
               <SelectValue placeholder="Choisir une catégorie" />
             </SelectTrigger>
             <SelectContent>
               {validCategories.length === 0 ? (
-                <SelectItem value="" disabled>
+                <div className="py-3 pl-8 pr-2 text-sm text-muted-foreground">
                   Aucune catégorie disponible
-                </SelectItem>
+                </div>
               ) : (
                 validCategories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
