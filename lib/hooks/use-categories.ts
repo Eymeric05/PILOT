@@ -17,8 +17,6 @@ export function useCategories() {
         const data = await fetchCategories()
         setCategories((data || []).filter((cat) => cat?.id))
       } catch (error: any) {
-        console.error("Error loading categories:", error)
-        // Ne pas faire crasher, définir un tableau vide
         setCategories([])
       } finally {
         setLoading(false)

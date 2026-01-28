@@ -20,6 +20,8 @@ interface HorizonSplitProps {
   user?: SupabaseUser | null
 }
 
+type CardRefEl = HTMLButtonElement | null
+
 function calculateZoneTotal(expenses: Expense[], zone: "user1" | "shared" | "user2", currentUser: UserRole): number {
   return expenses.reduce((total, expense) => {
     const amount = parseFloat(expense.amount) || 0
@@ -105,7 +107,7 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
     },
   ]
 
-  const cardRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const cardRefs = useRef<CardRefEl[]>([])
 
   useEffect(() => {
     cardRefs.current.forEach((ref, index) => {
@@ -133,7 +135,9 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
         return (
           <motion.button
             key={card.filter}
-            ref={(el) => { cardRefs.current[index] = el; }}
+            ref={(el: CardRefEl) => {
+              cardRefs.current[index] = el
+            }}
             type="button"
             onClick={() => onFilterChange(isActive ? null : card.filter)}
             whileHover={{ 
