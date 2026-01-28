@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr"
 import { getSupabaseEnv } from "@/lib/supabase-env"
 
 export const runtime = "nodejs"
@@ -8,20 +9,33 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null)
 
-    if (!body || !body.metadata || !body.accessToken) {
-      return NextResponse.json({ error: "Missing metadata or accessToken" }, { status: 400 })
+    if (!body || !body.metadata) {
+      return NextResponse.json({ error: "Missing metadata" }, { status: 400 })
     }
 
     const { supabaseUrl, supabaseKey } = getSupabaseEnv()
+    const cookieStore = await cookies()
     
-    // Créer un client avec le token de l'utilisateur
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${body.accessToken}`,
+    // Créer un client Supabase avec les cookies de session
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options)
+          })
         },
       },
     })
+
+    // Vérifier que l'utilisateur est authentifié
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     const { error } = await supabase.auth.updateUser({
       data: body.metadata,
