@@ -113,12 +113,19 @@ export function UserProfile({ children }: UserProfileProps) {
 
     setSavingName(true)
     try {
+      // Récupérer le token de session
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error("Session expirée")
+      }
+
       const res = await fetch("/api/user/update-metadata", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          accessToken: session.access_token,
           metadata: {
             display_name: displayName.trim(),
             partner_name: partnerName.trim(),
@@ -126,7 +133,6 @@ export function UserProfile({ children }: UserProfileProps) {
             partner_profile_picture_url: partnerProfilePicture,
           },
         }),
-        credentials: "include",
       })
 
       if (!res.ok) {
@@ -158,12 +164,19 @@ export function UserProfile({ children }: UserProfileProps) {
 
     setSavingPartnerName(true)
     try {
+      // Récupérer le token de session
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error("Session expirée")
+      }
+
       const res = await fetch("/api/user/update-metadata", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          accessToken: session.access_token,
           metadata: {
             display_name: displayName.trim(),
             partner_name: partnerName.trim(),
@@ -171,7 +184,6 @@ export function UserProfile({ children }: UserProfileProps) {
             partner_profile_picture_url: partnerProfilePicture,
           },
         }),
-        credentials: "include",
       })
 
       if (!res.ok) {
@@ -251,6 +263,12 @@ export function UserProfile({ children }: UserProfileProps) {
               },
             })
             
+            // Récupérer le token de session
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session?.access_token) {
+              throw new Error("Session expirée")
+            }
+
             const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
             const res = await fetch("/api/user/update-metadata", {
               method: "POST",
@@ -258,6 +276,7 @@ export function UserProfile({ children }: UserProfileProps) {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
+                accessToken: session.access_token,
                 metadata: {
                   [metadataKey]: base64String,
                   display_name: displayName.trim(),
@@ -266,7 +285,6 @@ export function UserProfile({ children }: UserProfileProps) {
                   partner_profile_picture_url: type === "partner" ? base64String : partnerProfilePicture,
                 },
               }),
-              credentials: "include",
             })
 
             if (!res.ok) {
@@ -321,12 +339,19 @@ export function UserProfile({ children }: UserProfileProps) {
     })
 
     try {
+      // Récupérer le token de session
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error("Session expirée")
+      }
+
       const res = await fetch("/api/user/update-metadata", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          accessToken: session.access_token,
           metadata: {
             [metadataKey]: null,
             display_name: displayName.trim(),
@@ -335,7 +360,6 @@ export function UserProfile({ children }: UserProfileProps) {
             partner_profile_picture_url: type === "partner" ? null : partnerProfilePicture,
           },
         }),
-        credentials: "include",
       })
 
       if (!res.ok) {
