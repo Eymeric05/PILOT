@@ -97,4 +97,4 @@ Si vous rencontrez l'erreur "Unable to exchange external code" lors de la connex
 
 Assurez-vous que vos variables d'environnement sont correctement configurées :
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (legacy) **ou** `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (recommandé)

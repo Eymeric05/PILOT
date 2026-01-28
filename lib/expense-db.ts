@@ -27,6 +27,7 @@ export async function fetchExpenses(userId: string, householdId?: string | null)
       description: exp.description || null,
       expenseDate: new Date(exp.expense_date),
       createdAt: new Date(exp.created_at),
+      updatedAt: new Date(exp.created_at),
       user_id: exp.user_id,
       household_id: exp.household_id,
     })) as Expense[]

@@ -11,7 +11,7 @@ export interface Expense {
   description?: string | null;
   expenseDate: Date;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
   user_id?: string | null;
   household_id?: string | null;
 }

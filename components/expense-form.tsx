@@ -56,25 +56,25 @@ export function ExpenseForm({
   const [description, setDescription] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Filtrer les catégories avec id='default' ou vides pour éviter les crashes
-  const validCategories = useMemo(() => 
-    categories.filter(cat => cat && cat.id && cat.id !== 'default' && cat.id !== ''),
+  // Filtrer les catégories invalides
+  const validCategories = useMemo(
+    () => categories.filter((cat) => cat && cat.id && cat.id !== ""),
     [categories]
   )
   
   // Synchroniser le categoryId quand les catégories chargent
   useEffect(() => {
     if (validCategories.length > 0) {
-      const firstValidId = validCategories.find(cat => cat && cat.id && cat.id !== '' && cat.id !== 'default')?.id
+      const firstValidId = validCategories.find((cat) => cat && cat.id && cat.id !== "")?.id
       
-      if (!categoryId || categoryId === '' || categoryId === 'default') {
+      if (!categoryId || categoryId === "") {
         // Sélectionner automatiquement la première catégorie valide si aucune n'est sélectionnée
         if (firstValidId) {
           setCategoryId(firstValidId)
         }
       } else {
         // Vérifier que la catégorie sélectionnée est toujours valide
-        const currentCategoryValid = validCategories.some(cat => cat && cat.id === categoryId && cat.id !== '' && cat.id !== 'default')
+        const currentCategoryValid = validCategories.some((cat) => cat && cat.id === categoryId && cat.id !== "")
         if (!currentCategoryValid && firstValidId) {
           setCategoryId(firstValidId)
         }
@@ -107,8 +107,8 @@ export function ExpenseForm({
     e.preventDefault()
     if (isSubmitting) return
     
-    if (!name || !amount || !categoryId || categoryId === 'default') {
-      if (!categoryId || categoryId === 'default') {
+    if (!name || !amount || !categoryId) {
+      if (!categoryId) {
         alert("Veuillez sélectionner une catégorie valide")
       }
       return
@@ -142,7 +142,7 @@ export function ExpenseForm({
         return today.toISOString().split("T")[0]
       })
       if (validCategories.length > 0) {
-        const firstValidId = validCategories.find(cat => cat && cat.id && cat.id !== '' && cat.id !== 'default')?.id
+        const firstValidId = validCategories.find((cat) => cat && cat.id && cat.id !== "")?.id
         if (firstValidId) {
           setCategoryId(firstValidId)
         } else {
@@ -221,16 +221,16 @@ export function ExpenseForm({
               <SelectValue placeholder={validCategories.length === 0 ? "Aucune catégorie disponible" : "Choisir une catégorie"} />
             </SelectTrigger>
             <SelectContent>
-              {validCategories.length === 0 || !validCategories.some(cat => cat && cat.id && cat.id !== '' && cat.id !== 'default') ? (
+              {validCategories.length === 0 || !validCategories.some((cat) => cat && cat.id && cat.id !== '') ? (
                 <SelectItem value="none" disabled>
                   Aucune catégorie disponible
                 </SelectItem>
               ) : (
                 validCategories
-                  .filter(category => category && category.id && category.id !== '' && category.id !== 'default')
+                  .filter((category) => category && category.id && category.id !== '')
                   .map((category) => {
                     // Triple vérification avant le rendu
-                    if (!category || !category.id || category.id === '' || category.id === 'default') {
+                    if (!category || !category.id || category.id === '') {
                       return null
                     }
                     return (
