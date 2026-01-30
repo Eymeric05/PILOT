@@ -64,6 +64,7 @@ export async function POST(req: Request) {
       id?: string
       user_metadata?: Record<string, unknown>
       msg?: string
+      error_description?: string
     }
     if (!getRes.ok) {
       const msg = getJson?.msg ?? getJson?.error_description ?? "Session invalide ou expirée"

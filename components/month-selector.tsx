@@ -51,21 +51,14 @@ export function MonthSelector({ currentDate, onDateChange }: MonthSelectorProps)
       transition={{ delay: 0.2, duration: 0.5 }}
       className="flex items-center justify-between py-6 mb-6"
     >
-      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={goToPreviousMonth}
-          className="h-14 w-14 rounded-2xl glass hover:bg-primary/10 hover:border-primary/30 border-2 border-border/30 transition-all duration-300"
-        >
-          <motion.div
-            whileHover={{ x: -4 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </motion.div>
-        </Button>
-      </motion.div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={goToPreviousMonth}
+        className="h-14 w-14 rounded-2xl glass border-2 border-border/30 transition-colors duration-200"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </Button>
       
       <motion.div
         key={`${monthName}-${year}`}
@@ -76,21 +69,14 @@ export function MonthSelector({ currentDate, onDateChange }: MonthSelectorProps)
         </h2>
       </motion.div>
       
-      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={goToNextMonth}
-          className="h-14 w-14 rounded-2xl glass hover:bg-primary/10 hover:border-primary/30 border-2 border-border/30 transition-all duration-300"
-        >
-          <motion.div
-            whileHover={{ x: 4 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <ChevronRight className="h-6 w-6" />
-          </motion.div>
-        </Button>
-      </motion.div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={goToNextMonth}
+        className="h-14 w-14 rounded-2xl glass border-2 border-border/30 transition-colors duration-200"
+      >
+        <ChevronRight className="h-6 w-6" />
+      </Button>
     </motion.div>
   )
 }

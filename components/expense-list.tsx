@@ -28,8 +28,9 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
     return (
       <motion.div
         ref={logoRef}
-        className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 text-primary-foreground font-bold text-xl shadow-lg"
-        whileHover={{ scale: 1.1, rotate: 5 }}
+        className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 text-primary-foreground font-bold text-xl shadow-lg ring-2 ring-transparent transition-[box-shadow,transform] duration-200 hover:ring-primary/50 hover:shadow-xl hover:shadow-primary/20"
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         {name.charAt(0).toUpperCase()}
       </motion.div>
@@ -41,8 +42,9 @@ function LogoDisplay({ logoUrl, name }: { logoUrl: string | null | undefined; na
   return (
     <motion.div
       ref={logoRef}
-      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl glass overflow-hidden border-2 border-border/30"
-      whileHover={{ scale: 1.1, rotate: 5 }}
+      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl glass overflow-hidden border-2 border-border/30 ring-2 ring-transparent transition-[box-shadow,transform] duration-200 hover:ring-primary/40 hover:shadow-lg hover:shadow-primary/10"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
       <Image
         src={imageUrl}
@@ -96,20 +98,8 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete, activ
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-            whileHover={{ 
-              y: -4,
-              transition: { duration: 0.2 }
-            }}
-            className="group relative flex items-center gap-4 rounded-2xl glass border-2 border-border/30 p-5
-                       hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10
-                       transition-all duration-500 ease-out overflow-hidden"
+            className="group relative flex items-center gap-4 rounded-2xl glass border-2 border-border/30 p-5 transition-colors duration-200 overflow-hidden"
           >
-            {/* Gradient overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            {/* Animated border glow */}
-            <div className="absolute inset-0 rounded-2xl border-2 border-primary/0 group-hover:border-primary/30 transition-all duration-500" />
-
             <LogoDisplay logoUrl={expense.logoUrl} name={expense.name} />
             
             <div className="flex-1 min-w-0 relative z-10">
@@ -119,7 +109,6 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete, activ
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    whileHover={{ scale: 1.2, rotate: 15 }}
                     className="flex items-center justify-center"
                   >
                     <Users className="h-4 w-4 text-primary" />
@@ -161,16 +150,14 @@ export function ExpenseList({ expenses, categories, currentUser, onDelete, activ
             </div>
             
             {onDelete && (
-              <motion.button
+              <button
                 onClick={() => onDelete(expense.id)}
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-xl glass hover:bg-destructive/20 hover:text-destructive
-                           transition-all duration-300 opacity-0 group-hover:opacity-100 z-20"
+                           transition-colors duration-200 opacity-0 group-hover:opacity-100 z-20"
                 aria-label="Supprimer"
               >
                 <X className="h-4 w-4" />
-              </motion.button>
+              </button>
             )}
           </motion.div>
         ))}

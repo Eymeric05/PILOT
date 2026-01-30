@@ -148,24 +148,12 @@ export function HorizonSplit({ expenses, currentUser, activeFilter, onFilterChan
             whileTap={{ scale: 0.98 }}
             className={cn(
               "relative flex flex-col items-center justify-center p-6 rounded-3xl",
-              "glass border-2 transition-all duration-500 ease-out cursor-pointer",
-              "overflow-hidden group",
+              "glass border-2 transition-colors duration-200 cursor-pointer overflow-hidden",
               isActive
                 ? "border-primary/60 shadow-2xl shadow-primary/20 scale-105"
-                : "border-border/30 hover:border-border/60 hover:shadow-xl"
+                : "border-border/30"
             )}
           >
-            {/* Gradient background on hover */}
-            <div className={cn(
-              "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-              card.color
-            )} />
-            
-            {/* Shine effect */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            </div>
-
             {/* Profile picture or icon */}
             {card.picture ? (
               <div className="relative mb-3">
