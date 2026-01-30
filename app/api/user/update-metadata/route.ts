@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
 import { getSupabaseEnv } from "@/lib/supabase-env"
 
 export const runtime = "nodejs"
@@ -13,25 +12,30 @@ export async function POST(req: Request) {
     }
 
     const { supabaseUrl, supabaseKey } = getSupabaseEnv()
-    
-    // Créer un client avec le token passé depuis le client
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${body.accessToken}`,
-        },
+    const accessToken = body.accessToken as string
+    const metadata = body.metadata as Record<string, unknown>
+
+    // Appel direct à l'API Auth Supabase depuis le serveur (évite ERR_CONNECTION_CLOSED côté navigateur)
+    const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        apikey: supabaseKey,
+        "Content-Type": "application/json",
+        "X-Supabase-Api-Version": "2024-01-01",
       },
+      body: JSON.stringify({ data: metadata }),
     })
 
-    const { error } = await supabase.auth.updateUser({
-      data: body.metadata,
-    })
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: json.msg || json.error_description || json.message || "Erreur Supabase" },
+        { status: res.status >= 400 ? res.status : 500 }
+      )
     }
 
-    return NextResponse.json({ success: true }, { status: 200 })
+    return NextResponse.json({ success: true, user: json }, { status: 200 })
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 })
   }
