@@ -41,6 +41,10 @@ export function getSupabaseEnv() {
     )
   }
 
-  return { supabaseUrl, supabaseKey }
+  const serviceRoleKey =
+    normalizeEnv(process.env.SUPABASE_SERVICE_ROLE_KEY) ??
+    normalizeEnv(process.env.SUPABASE_SERVICE_ROLE_KEY_SECRET)
+
+  return { supabaseUrl, supabaseKey, serviceRoleKey: serviceRoleKey ?? undefined }
 }
 

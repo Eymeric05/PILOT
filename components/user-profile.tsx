@@ -15,7 +15,6 @@ import {
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { User, LogOut, Mail, Edit2, Upload, X, Settings } from "lucide-react"
-import Image from "next/image"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 interface UserProfileProps {
@@ -215,46 +214,56 @@ export function UserProfile({ children }: UserProfileProps) {
         reader.onloadend = async () => {
           try {
             const base64String = reader.result as string
-            
-            if (!base64String) {
-              throw new Error("Impossible de convertir l'image")
-            }
-            
-            // Optimistic UI : mettre à jour immédiatement
-            if (type === "user") {
-              setProfilePicture(base64String)
-            } else {
-              setPartnerProfilePicture(base64String)
-            }
-
-            setUser({
-              ...user,
-              user_metadata: {
-                ...user.user_metadata,
-                [type === "user" ? "profile_picture_url" : "partner_profile_picture_url"]: base64String,
-              },
-            })
+            if (!base64String) throw new Error("Impossible de convertir l'image")
 
             const { data: { session } } = await supabase.auth.getSession()
             if (!session?.access_token) throw new Error("Session expirée")
 
-            const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
+            // 1) Upload vers Storage → URL publique (pas de base64 dans user_metadata)
+            const uploadRes = await fetch("/api/user/upload-avatar", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                accessToken: session.access_token,
+                image: base64String,
+                type,
+              }),
+            })
+            const uploadJson = await uploadRes.json().catch(() => ({}))
+            if (!uploadRes.ok) throw new Error(uploadJson.error || "Erreur lors de l'upload")
+
+            const pictureUrl = uploadJson.url as string
+            if (!pictureUrl) throw new Error("URL de l'image manquante")
+
+            // 2) Mise à jour du profil avec l'URL (état + API)
+            if (type === "user") {
+              setProfilePicture(pictureUrl)
+            } else {
+              setPartnerProfilePicture(pictureUrl)
+            }
+            setUser({
+              ...user,
+              user_metadata: {
+                ...user.user_metadata,
+                [type === "user" ? "profile_picture_url" : "partner_profile_picture_url"]: pictureUrl,
+              },
+            })
+
             const res = await fetch("/api/user/update-metadata", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 accessToken: session.access_token,
                 metadata: {
-                  [metadataKey]: base64String,
                   display_name: displayName.trim(),
                   partner_name: partnerName.trim(),
-                  profile_picture_url: type === "user" ? base64String : profilePicture,
-                  partner_profile_picture_url: type === "partner" ? base64String : partnerProfilePicture,
+                  profile_picture_url: type === "user" ? pictureUrl : profilePicture,
+                  partner_profile_picture_url: type === "partner" ? pictureUrl : partnerProfilePicture,
                 },
               }),
             })
             const json = await res.json().catch(() => ({}))
-            if (!res.ok) throw new Error(json.error || "Erreur lors du téléchargement")
+            if (!res.ok) throw new Error(json.error || "Erreur lors de la mise à jour")
 
             window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
             resolve()
@@ -371,23 +380,13 @@ export function UserProfile({ children }: UserProfileProps) {
               <div className="relative flex items-center gap-2">
                 {profilePicture ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border">
-                    {profilePicture.startsWith('data:image') || profilePicture.startsWith('data:image/') ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profilePicture}
-                        alt="Photo de profil"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Image
-                        src={profilePicture}
-                        alt="Photo de profil"
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    )}
+                    {/* img pour data URL et URLs Supabase Storage (domaine dynamique) */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={profilePicture}
+                      alt="Photo de profil"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ) : (
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-primary/10 border-2 border-border">
@@ -501,23 +500,12 @@ export function UserProfile({ children }: UserProfileProps) {
               <div className="relative flex items-center gap-2">
                 {partnerProfilePicture ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border">
-                    {partnerProfilePicture.startsWith('data:image') || partnerProfilePicture.startsWith('data:image/') ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={partnerProfilePicture}
-                        alt="Photo du partenaire"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Image
-                        src={partnerProfilePicture}
-                        alt="Photo du partenaire"
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    )}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={partnerProfilePicture}
+                      alt="Photo du partenaire"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ) : (
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-secondary/50 border-2 border-border">
