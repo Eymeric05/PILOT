@@ -113,46 +113,24 @@ export function UserProfile({ children }: UserProfileProps) {
 
     setSavingName(true)
     try {
-      // Récupérer le token de session
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error("Session expirée")
-      }
-
-      const res = await fetch("/api/user/update-metadata", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          display_name: displayName.trim(),
+          partner_name: partnerName.trim(),
+          profile_picture_url: profilePicture,
+          partner_profile_picture_url: partnerProfilePicture,
         },
-        body: JSON.stringify({
-          accessToken: session.access_token,
-          metadata: {
-            display_name: displayName.trim(),
-            partner_name: partnerName.trim(),
-            profile_picture_url: profilePicture,
-            partner_profile_picture_url: partnerProfilePicture,
-          },
-        }),
       })
 
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({ error: "Erreur inconnue" }))
-        throw new Error(error.error || "Erreur lors de la mise à jour")
-      }
+      if (error) throw error
 
-      // Rafraîchir la session pour obtenir les nouvelles métadonnées
-      const { data: { session: newSession } } = await supabase.auth.getSession()
-      if (newSession?.user) {
-        setUser(newSession.user)
-        setDisplayName(newSession.user.user_metadata?.display_name || newSession.user.email?.split("@")[0] || "")
+      if (data?.user) {
+        setUser(data.user)
+        setDisplayName(data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "")
       }
-
       setIsEditingName(false)
-      
-      // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
       window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
     } catch (error: any) {
-      console.error("Error updating display name:", error)
       alert(`Erreur lors de la mise à jour: ${error.message}`)
     } finally {
       setSavingName(false)
@@ -164,46 +142,24 @@ export function UserProfile({ children }: UserProfileProps) {
 
     setSavingPartnerName(true)
     try {
-      // Récupérer le token de session
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error("Session expirée")
-      }
-
-      const res = await fetch("/api/user/update-metadata", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          display_name: displayName.trim(),
+          partner_name: partnerName.trim(),
+          profile_picture_url: profilePicture,
+          partner_profile_picture_url: partnerProfilePicture,
         },
-        body: JSON.stringify({
-          accessToken: session.access_token,
-          metadata: {
-            display_name: displayName.trim(),
-            partner_name: partnerName.trim(),
-            profile_picture_url: profilePicture,
-            partner_profile_picture_url: partnerProfilePicture,
-          },
-        }),
       })
 
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({ error: "Erreur inconnue" }))
-        throw new Error(error.error || "Erreur lors de la mise à jour")
-      }
+      if (error) throw error
 
-      // Rafraîchir la session pour obtenir les nouvelles métadonnées
-      const { data: { session: newSession } } = await supabase.auth.getSession()
-      if (newSession?.user) {
-        setUser(newSession.user)
-        setPartnerName(newSession.user.user_metadata?.partner_name || "Personnel B")
+      if (data?.user) {
+        setUser(data.user)
+        setPartnerName(data.user.user_metadata?.partner_name || "Personnel B")
       }
-
       setIsEditingPartnerName(false)
-      
-      // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
       window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
     } catch (error: any) {
-      console.error("Error updating partner name:", error)
       alert(`Erreur lors de la mise à jour: ${error.message}`)
     } finally {
       setSavingPartnerName(false)
@@ -262,35 +218,19 @@ export function UserProfile({ children }: UserProfileProps) {
                 [type === "user" ? "profile_picture_url" : "partner_profile_picture_url"]: base64String,
               },
             })
-            
-            // Récupérer le token de session
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session?.access_token) {
-              throw new Error("Session expirée")
-            }
 
             const metadataKey = type === "user" ? "profile_picture_url" : "partner_profile_picture_url"
-            const res = await fetch("/api/user/update-metadata", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
+            const { error } = await supabase.auth.updateUser({
+              data: {
+                [metadataKey]: base64String,
+                display_name: displayName.trim(),
+                partner_name: partnerName.trim(),
+                profile_picture_url: type === "user" ? base64String : profilePicture,
+                partner_profile_picture_url: type === "partner" ? base64String : partnerProfilePicture,
               },
-              body: JSON.stringify({
-                accessToken: session.access_token,
-                metadata: {
-                  [metadataKey]: base64String,
-                  display_name: displayName.trim(),
-                  partner_name: partnerName.trim(),
-                  profile_picture_url: type === "user" ? base64String : profilePicture,
-                  partner_profile_picture_url: type === "partner" ? base64String : partnerProfilePicture,
-                },
-              }),
             })
 
-            if (!res.ok) {
-              const error = await res.json().catch(() => ({ error: "Erreur inconnue" }))
-              throw new Error(error.error || "Erreur lors de la mise à jour")
-            }
+            if (error) throw error
 
             window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
             resolve()
@@ -339,33 +279,17 @@ export function UserProfile({ children }: UserProfileProps) {
     })
 
     try {
-      // Récupérer le token de session
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error("Session expirée")
-      }
-
-      const res = await fetch("/api/user/update-metadata", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          [metadataKey]: null,
+          display_name: displayName.trim(),
+          partner_name: partnerName.trim(),
+          profile_picture_url: type === "user" ? null : profilePicture,
+          partner_profile_picture_url: type === "partner" ? null : partnerProfilePicture,
         },
-        body: JSON.stringify({
-          accessToken: session.access_token,
-          metadata: {
-            [metadataKey]: null,
-            display_name: displayName.trim(),
-            partner_name: partnerName.trim(),
-            profile_picture_url: type === "user" ? null : profilePicture,
-            partner_profile_picture_url: type === "partner" ? null : partnerProfilePicture,
-          },
-        }),
       })
 
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({ error: "Erreur inconnue" }))
-        throw new Error(error.error || "Erreur lors de la mise à jour")
-      }
+      if (error) throw error
 
       // Déclencher un événement pour mettre à jour l'utilisateur dans page.tsx
       window.dispatchEvent(new CustomEvent('userMetadataUpdated'))
